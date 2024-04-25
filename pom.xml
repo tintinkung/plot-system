@@ -270,6 +270,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <build.number>SNAPSHOT</build.number>
+        <build.number>build.1</build.number>
     </properties>
 </project>

@@ -83,13 +83,19 @@ public class CityPlotWorld extends PlotWorld {
     @Beta
     @Override
     public int getPlotHeight() throws IOException {
-        return getPlot().getVersion() >= 3 ? MIN_WORLD_HEIGHT + getWorldHeight() : getPlotHeightCentered();
+        int worldHeight;
+        try { worldHeight = getWorldHeight(); }
+        catch (IOException ex) { worldHeight = MIN_WORLD_HEIGHT; }
+        return getPlot().getVersion() >= 3 ? MIN_WORLD_HEIGHT + worldHeight : getPlotHeightCentered();
     }
 
     @Beta
     @Override
     public int getPlotHeightCentered() throws IOException {
-        return Math.min(MIN_WORLD_HEIGHT + getWorldHeight() + super.getPlotHeightCentered(), PlotWorld.MAX_WORLD_HEIGHT);
+        int worldHeight;
+        try { worldHeight = getWorldHeight(); }
+        catch (IOException ex) { worldHeight = 0; }
+        return Math.min(MIN_WORLD_HEIGHT + worldHeight + super.getPlotHeightCentered(), PlotWorld.MAX_WORLD_HEIGHT);
     }
 
     /**
@@ -101,14 +107,13 @@ public class CityPlotWorld extends PlotWorld {
     public int getWorldHeight() throws IOException {
         Clipboard clipboard = FaweAPI.load(getPlot().getOutlinesSchematic());
         int plotHeight = clipboard != null ? clipboard.getMinimumPoint().getBlockY() : MIN_WORLD_HEIGHT;
+        int maxBuildingHeight = 128; // Highest building height a plot can be
+        int groundLayer = 16; // Additional ground layer the plot use to save as schematic need to be included for plot's y-level
 
-        // Plots created below min world height are not supported
-        if (plotHeight < MIN_WORLD_HEIGHT) throw new IOException("Plot height is not supported");
-
-        // Move Y height to a usable value below 256 blocks
-        while (plotHeight >= 150) {
-            plotHeight -= 150;
-        }
+        // Plots created outside of vanilla build limit is thrown to be handled by case
+        if (plotHeight + groundLayer < MIN_WORLD_HEIGHT
+            | plotHeight + maxBuildingHeight > MAX_WORLD_HEIGHT)
+            throw new IOException("Plot height is out of range");
         return plotHeight;
     }
 
