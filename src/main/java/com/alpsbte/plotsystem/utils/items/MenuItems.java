@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -34,14 +34,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 
 public class MenuItems {
+    private MenuItems() {}
 
     public static ItemStack closeMenuItem(Player player) {
-        return new ItemBuilder(Material.BARRIER)
+        return new ItemBuilder(BaseItems.MENU_CLOSE.getItem())
                 .setName(text(LangUtil.getInstance().get(player, LangPaths.MenuTitle.CLOSE), RED, BOLD))
                 .build();
     }
@@ -65,10 +65,10 @@ public class MenuItems {
     }
 
     public static ItemStack errorItem(Player player) {
-        return new ItemBuilder(Material.BARRIER)
+        return new ItemBuilder(BaseItems.MENU_ERROR.getItem())
                 .setName(text(LangUtil.getInstance().get(player, LangPaths.MenuTitle.ERROR), RED, BOLD))
                 .setLore(new LoreBuilder()
-                    .addLine(LangUtil.getInstance().get(player, LangPaths.MenuDescription.ERROR)).build())
+                        .addLine(LangUtil.getInstance().get(player, LangPaths.MenuDescription.ERROR)).build())
                 .build();
     }
 
@@ -78,6 +78,7 @@ public class MenuItems {
                 .build();
     }
 
+    @SuppressWarnings("unused")
     public static ItemStack loadingItem(ItemStack itemStack, Player player) {
         return new ItemBuilder(itemStack)
                 .setName(text(LangUtil.getInstance().get(player, LangPaths.MenuTitle.LOADING), GOLD, BOLD))
@@ -87,6 +88,16 @@ public class MenuItems {
     public static ItemStack filterItem(Player langPlayer) {
         return new ItemBuilder(Material.HOPPER, 1)
                 .setName(text(LangUtil.getInstance().get(langPlayer, LangPaths.MenuTitle.FILTER_BY_COUNTRY), GOLD, BOLD))
+                .build();
+    }
+
+    public static ItemStack getRandomItem(Player player) {
+        return new ItemBuilder(BaseItems.RANDOM_PLOT_ITEM.getItem())
+                .setName(text(LangUtil.getInstance().get(player, LangPaths.MenuTitle.COMPANION_RANDOM), AQUA).decoration(BOLD, true))
+                .setLore(new LoreBuilder()
+                        .emptyLine()
+                        .addLine(text(LangUtil.getInstance().get(player, LangPaths.MenuDescription.COMPANION_RANDOM), GRAY))
+                        .build())
                 .build();
     }
 }

@@ -26,7 +26,6 @@ plot:
   status: "Status"
   score: "Punktestand"
   total-score: "Gesamtpunktestand"
-  effective-score: "Effektiver Punktestand"
   completed-plots: "Abgeschlossene Plots"
   group-system:
     empty-member-slot: "Leerer Mitglied-Slot"
@@ -99,7 +98,6 @@ menu-title:
   leave-plot: 'Plot Verlassen'
   review-plots: 'Plots Bewerten'
   review-plot: 'Plot #{0} Bewerten'
-  enter-player-name: 'Spielername Eingeben'
   select-language: 'Sprache Auswählen'
   select-plot-type: 'Plot Typ Auswählen'
   select-focus-mode: 'Focus-Mode Auswählen'
@@ -111,6 +109,7 @@ menu-title:
   tutorial-stages: 'Tutorial Stages'
   tutorial-end: 'Tutorial Beenden'
   tutorial-beginner: 'Erste Schritte'
+  companion-random: 'Zufallsauswahl'
 #-----------------------------------------------------
 #| Menu Descriptions
 #-----------------------------------------------------
@@ -141,9 +140,10 @@ menu-description:
   select-city-inspiration-mode-desc: "Baue dein Plot auf einer schwebenden Insel mit Umgebung und den Plots anderer Spieler, welche sich in der Nähe des eigenen Plots befinden.%newline%%newline%+ Umgebung%newline%+ Nachbarsgrundstücke"
   filter-desc: "Alle Anzeigen"
   information-desc: "Ein Plot kann maximal 20 Punkte erhalten. Erhält das Plot weniger als 8 Punkte oder eine Kategorie 0 Punkte, wird das Plot abgelehnt und der Builder bekommt das Plot zurück, um es zu verbessern. Bei 0 Punkten wird das Plot gelöscht."
-  tutorials-desc: 'Lerne die Grundlagen des BuildTheEarth%newline%Projekts und erweitere deine Baukenntnisse%newline%mit Tutorials zu verschiedenen Themen.'
+  tutorials-desc: 'Lerne die Grundlagen des BuildTheEarth Projekts und erweitere deine Baukenntnisse mit Tutorials zu verschiedenen Themen.'
   tutorial-end-desc: 'Dein Fortschritt wird gespeichert.'
-  tutorial-beginner-desc: 'Lerne die Baugrundlagen für%newline%das BuildTheEarth Projekt.'
+  tutorial-beginner-desc: 'Lerne die Baugrundlagen für das BuildTheEarth Projekt.'
+  companion-random-desc: 'Klicke hier, um zufällig auszuwählen.'
 #-----------------------------------------------------
 #| Review
 #-----------------------------------------------------
@@ -243,7 +243,7 @@ message:
     can-only-submit-unfinished-plots: "Du kannst nur unfertige Plots abgeben!"
     can-only-undo-submissions-unreviewed-plots: "Du kannst nur Einreichungen von unbewerteten Plots rückgängig machen!"
     can-only-manage-members-unfinished-plots: "Du kannst nur Mitglieder von unfertigen Plots verwalten!"
-    cannot-teleport-outside-plot: "Du kannst dich nicht ausserhalb des Plotes teleportieren!"
+    cannot-teleport-outside-plot: "Du kannst dich nicht ausserhalb des Plots teleportieren!"
     cannot-undo-review: "Du kannst eine Bewertung nicht rückgängig machen, wenn du sie nicht selbst erstellt hast!"
     cannot-send-feedback: "Du kannst auf einen Plot kein Feedback geben, wenn du ihn nicht selbst bewertet hast!"
     cannot-review-own-plot: "Du kannst deine eigenen Plots nicht bewerten!"
@@ -389,4 +389,4 @@ tutorials:
       stage-10-tasks:
         - 'Lies alle Tipps auf dem Plot und markiere sie als gelesen.'
 #NOTE: Do not change
-config-version: 2.0
+config-version: 2.2

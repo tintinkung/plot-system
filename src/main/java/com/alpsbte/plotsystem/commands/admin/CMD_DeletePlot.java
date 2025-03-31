@@ -29,49 +29,40 @@ import com.alpsbte.plotsystem.commands.BaseCommand;
 import com.alpsbte.plotsystem.core.system.plot.Plot;
 import com.alpsbte.plotsystem.core.system.plot.utils.PlotUtils;
 import com.alpsbte.plotsystem.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.SQLException;
-import java.util.logging.Level;
-
 public class CMD_DeletePlot extends BaseCommand {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String s, String[] args) {
-        if(!sender.hasPermission(getPermission())) {
+        if (!sender.hasPermission(getPermission())) {
             sender.sendMessage(Utils.ChatUtils.getAlertFormat("You don't have permission to use this command!"));
             return true;
         }
 
-        if(!(args.length > 0 && AlpsUtils.tryParseInt(args[0]) != null)) {
+        if (!(args.length > 0 && AlpsUtils.tryParseInt(args[0]) != null)) {
             sendInfo(sender);
             return true;
         }
 
         int plotID = Integer.parseInt(args[0]);
-        if(!PlotUtils.plotExists(plotID)) {
+        if (!PlotUtils.plotExists(plotID)) {
             sender.sendMessage(Utils.ChatUtils.getAlertFormat("Could not find plot with ID #" + plotID + "!"));
             return true;
         }
 
-        try {
-            sender.sendMessage(Utils.ChatUtils.getInfoFormat("Deleting plot..."));
-            if (PlotUtils.Actions.deletePlot(new Plot(plotID))) {
-                sender.sendMessage(Utils.ChatUtils.getInfoFormat("Successfully deleted plot with the ID §6#" + plotID + "§a!"));
-                if (getPlayer(sender) != null) getPlayer(sender).playSound(getPlayer(sender).getLocation(), Utils.SoundUtils.DONE_SOUND, 1f, 1f);
-            } else sender.sendMessage(Utils.ChatUtils.getAlertFormat("An unexpected error has occurred!"));
-        } catch (SQLException ex) {
-            sender.sendMessage(Utils.ChatUtils.getAlertFormat("An error occurred while executing command!"));
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
-        }
+        sender.sendMessage(Utils.ChatUtils.getInfoFormat("Deleting plot..."));
+        if (PlotUtils.Actions.deletePlot(new Plot(plotID))) {
+            sender.sendMessage(Utils.ChatUtils.getInfoFormat("Successfully deleted plot with the ID §6#" + plotID + "§a!"));
+            if (getPlayer(sender) != null) getPlayer(sender).playSound(getPlayer(sender).getLocation(), Utils.SoundUtils.DONE_SOUND, 1f, 1f);
+        } else sender.sendMessage(Utils.ChatUtils.getAlertFormat("An unexpected error has occurred!"));
         return true;
     }
 
     @Override
     public String[] getNames() {
-        return new String[] { "deleteplot" };
+        return new String[]{"deleteplot"};
     }
 
     @Override
@@ -81,7 +72,7 @@ public class CMD_DeletePlot extends BaseCommand {
 
     @Override
     public String[] getParameter() {
-        return new String[] { "ID" };
+        return new String[]{"ID"};
     }
 
     @Override
