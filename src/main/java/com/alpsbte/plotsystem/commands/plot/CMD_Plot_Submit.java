@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,10 @@
 package com.alpsbte.plotsystem.commands.plot;
 
 import com.alpsbte.alpslib.utils.AlpsUtils;
+import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.commands.BaseCommand;
 import com.alpsbte.plotsystem.commands.SubCommand;
+import com.alpsbte.plotsystem.core.database.DataProvider;
 import com.alpsbte.plotsystem.core.system.Builder;
 import com.alpsbte.plotsystem.core.system.plot.AbstractPlot;
 import com.alpsbte.plotsystem.core.system.plot.Plot;
@@ -34,12 +36,16 @@ import com.alpsbte.plotsystem.core.system.plot.utils.PlotUtils;
 import com.alpsbte.plotsystem.utils.Utils;
 import com.alpsbte.plotsystem.utils.enums.Status;
 import com.alpsbte.plotsystem.utils.io.LangPaths;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
+import java.util.concurrent.CompletableFuture;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class CMD_Plot_Submit extends SubCommand {
 
@@ -49,64 +55,69 @@ public class CMD_Plot_Submit extends SubCommand {
 
     @Override
     public void onCommand(CommandSender sender, String[] args) {
-        try {
+        Player player = getPlayer(sender);
+        if (getPlayer(sender) == null) {
+            Bukkit.getConsoleSender().sendMessage(text("This command can only be used as a player!", NamedTextColor.RED));
+            return;
+        }
+
+        CompletableFuture.runAsync(() -> {
             Plot plot;
             if (args.length > 0 && AlpsUtils.tryParseInt(args[0]) != null) {
-                int plotID = Integer.parseInt(args[0]);
-                if (PlotUtils.plotExists(plotID)) {
-                    plot = new Plot(plotID);
-                } else {
-                    sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLOT_DOES_NOT_EXIST)));
-                    return;
-                }
-            } else if (getPlayer(sender) != null && PlotUtils.isPlotWorld(getPlayer(sender).getWorld())) {
-                AbstractPlot p = PlotUtils.getCurrentPlot(Builder.byUUID(getPlayer(sender).getUniqueId()));
-                if (p instanceof Plot) {
-                    plot = (Plot) p;
-                } else {
+                plot = DataProvider.PLOT.getPlotById(Integer.parseInt(args[0]));
+            } else if (player != null && PlotUtils.isPlotWorld(player.getWorld())) {
+                AbstractPlot p = PlotUtils.getCurrentPlot(Builder.byUUID(player.getUniqueId()), Status.unfinished);
+                if (!(p instanceof Plot)) {
                     sendInfo(sender);
                     return;
                 }
+                plot = (Plot) p;
             } else {
                 sendInfo(sender);
                 return;
             }
 
-            if (sender.hasPermission("plotsystem.review") || Objects.requireNonNull(plot).getPlotOwner().getUUID().equals(getPlayer(sender).getUniqueId())) {
-                if (Objects.requireNonNull(plot).getStatus() == Status.unfinished) {
-                    PlotUtils.Actions.submitPlot(plot);
-
-                    if (plot.getPlotMembers().isEmpty()) {
-                        // Plot was made alone
-                        langUtil.broadcast(LangPaths.Message.Info.FINISHED_PLOT, String.valueOf(plot.getID()), plot.getPlotOwner().getName());
-                    } else {
-                        // Plot was made in a group
-                        StringBuilder sb = new StringBuilder(plot.getPlotOwner().getName() + ", ");
-
-                        for (int i = 0; i < plot.getPlotMembers().size(); i++) {
-                            sb.append(i == plot.getPlotMembers().size() - 1 ?
-                                    plot.getPlotMembers().get(i).getName() :
-                                    plot.getPlotMembers().get(i).getName() + ", ");
-                        }
-                        langUtil.broadcast(LangPaths.Message.Info.FINISHED_PLOT, String.valueOf(plot.getID()), sb.toString());
-                    }
-
-                    if (getPlayer(sender) != null) getPlayer(sender).playSound(getPlayer(sender).getLocation(), Utils.SoundUtils.FINISH_PLOT_SOUND, 1, 1);
-                } else {
-                    sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.CAN_ONLY_SUBMIT_UNFINISHED_PLOTS)));
-                }
-            } else {
-                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLAYER_IS_NOT_ALLOWED)));
+            if (plot == null) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLOT_DOES_NOT_EXIST)));
+                return;
             }
-        } catch (SQLException ex) {
-            sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.ERROR_OCCURRED)));
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
-        }
+            if (!Utils.isOwnerOrReviewer(sender, player, plot)) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLAYER_IS_NOT_ALLOWED)));
+                return;
+            }
+            if (plot.getStatus() != Status.unfinished) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.CAN_ONLY_SUBMIT_UNFINISHED_PLOTS)));
+                return;
+            }
+
+            List<Builder> plotMembers = plot.getPlotMembers();
+
+            Bukkit.getScheduler().runTask(PlotSystem.getPlugin(), () -> {
+
+                PlotUtils.Actions.submitPlot(plot);
+                if (plotMembers.isEmpty()) {
+                    // Plot was made alone
+                    langUtil.broadcast(LangPaths.Message.Info.FINISHED_PLOT, String.valueOf(plot.getID()), plot.getPlotOwner().getName());
+                } else {
+                    // Plot was made in a group
+                    StringBuilder sb = new StringBuilder(plot.getPlotOwner().getName() + ", ");
+
+                    for (int i = 0; i < plotMembers.size(); i++) {
+                        sb.append(i == plotMembers.size() - 1 ?
+                                plotMembers.get(i).getName() :
+                                plotMembers.get(i).getName() + ", ");
+                    }
+                    langUtil.broadcast(LangPaths.Message.Info.FINISHED_PLOT, String.valueOf(plot.getID()), sb.toString());
+                }
+
+                Objects.requireNonNull(player).playSound(player.getLocation(), Utils.SoundUtils.FINISH_PLOT_SOUND, 1, 1);
+            });
+        });
     }
 
     @Override
     public String[] getNames() {
-        return new String[] { "submit" };
+        return new String[]{"submit"};
     }
 
     @Override
@@ -116,7 +127,7 @@ public class CMD_Plot_Submit extends SubCommand {
 
     @Override
     public String[] getParameter() {
-        return new String[] { "ID" };
+        return new String[]{"ID"};
     }
 
     @Override

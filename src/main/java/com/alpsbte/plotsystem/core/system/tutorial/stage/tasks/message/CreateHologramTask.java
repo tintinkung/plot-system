@@ -25,7 +25,7 @@
 package com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.message;
 
 import com.alpsbte.plotsystem.core.system.tutorial.AbstractTutorialHologram;
-import com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils;
+import com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils;
 import com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.AbstractTask;
 import eu.decentsoftware.holograms.event.HologramClickEvent;
 import net.kyori.adventure.text.Component;
@@ -62,7 +62,7 @@ public class CreateHologramTask extends AbstractTask {
     private void onMarkAsReadClick(String holoId) {
         AbstractTutorialHologram hologram = hologramsToCreate.stream().filter(holo -> holo.getId().equals(holoId)).findFirst().orElse(null);
         if (hologram == null) return;
-        player.playSound(player.getLocation(), TutorialUtils.Sound.ASSIGNMENT_COMPLETED,1f, 1f);
+        player.playSound(player.getLocation(), TutorialUtils.Sound.ASSIGNMENT_COMPLETED, 1f, 1f);
         hologramsToCreate.remove(hologram);
         updateAssignments();
 

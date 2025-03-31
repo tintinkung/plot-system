@@ -26,7 +26,6 @@ plot:
   status: "상태"
   score: "점수"
   total-score: "총점"
-  effective-score: "유효 점수"
   completed-plots: "완성된 플롯들"
   group-system:
     empty-member-slot: "빈 멤버 슬롯"
@@ -99,7 +98,6 @@ menu-title:
   leave-plot: "플롯 떠나기"
   review-plots: "플롯 리뷰하기"
   review-plot: "플롯 리뷰 #{0}"
-  enter-player-name: "플레이어 이름 입력하기"
   select-language: "언어 설정"
   select-plot-type: 'Select Plot Type'
   select-focus-mode: "Select Focus Mode"
@@ -111,6 +109,7 @@ menu-title:
   tutorial-stages: 'Tutorial Stages'
   tutorial-end: 'End Tutorial'
   tutorial-beginner: 'Get Started'
+  companion-random: '무작위 선택'
 # -----------------------------------------------------
 # | Menu Descriptions
 # -----------------------------------------------------
@@ -125,7 +124,7 @@ menu-description:
   teleport-desc: "클릭하여 플롯으로 이동하기"
   abandon-desc: "클릭하여 초기화 및 다른 사람이 건축하도록 하기"
   undo-submit-desc: "클릭하여 제출 취소하기"
-  manage-members-desc: "클릭하여 플롯에 다른 플레이어를 추가 혹은 %newline% 제외할 수 있는 플롯 멤버 메뉴를 여세요"
+  manage-members-desc: "클릭하여 플롯에 다른 플레이어를 추가 혹은 제외할 수 있는 플롯 멤버 메뉴를 여세요"
   feedback-desc: "클릭하여 플롯 리뷰 피드백 보기"
   custom-heads-desc: "클릭하여 다양한 커스텀 헤드를 얻으세요"
   banner-maker-desc: "Click to create and save your own banners"
@@ -141,9 +140,10 @@ menu-description:
   select-city-inspiration-mode-desc: "Build on a floating island with surrounding environment and other players plots that got scanned near the own plot.%newline%%newline%+ Environment%newline%+ Neighboring plots"
   filter-desc: "Show All"
   information-desc: "A plot can receive a maximum of 20 points. If the plot receives less than 8 points or one category has 0 points, the plot is rejected and the builder gets the plot back to improve it. If the plot receives 0 points, it gets abandoned."
-  tutorials-desc: 'Learn the basics of the BuildTheEarth%newline%project and enhance your building skills%newline%with tutorials on various topics.'
+  tutorials-desc: 'Learn the basics of the BuildTheEarth project and enhance your building skills with tutorials on various topics.'
   tutorial-end-desc: 'Your progress will be saved.'
-  tutorial-beginner-desc: 'Learn the basics how to build%newline%for the BuildTheEarth project.'
+  tutorial-beginner-desc: 'Learn the basics how to build for the BuildTheEarth project.'
+  companion-random-desc: '클릭하여 무작위로 선택합니다.'
 # -----------------------------------------------------
 # | Review
 # -----------------------------------------------------
@@ -197,6 +197,7 @@ note:
     click-to-show-plots: "§6여기§a를 클릭해 자신의 플롯들을 확인하세요!"
     click-to-play-with-friends: "§7친구와 플레이하시려면 §6여기§7를 클릭하세요!"
     tutorial-show-stages: 'Show Stages'
+    click-to-open-plots-menu: "클릭하여 플롯 메뉴 열기..."
 # -----------------------------------------------------
 # | Messages
 # -----------------------------------------------------
@@ -260,6 +261,7 @@ message:
     player-invite-to-rejected: '{0} has rejected your invitation.'
     player-needs-to-be-on-plot: "플롯에서만 사용할 수 있습니다!"
     player-needs-higher-score: "해당 난이도에서 건축하시려면 더 높은 점수가 필요합니다."
+    player-missing-tutorial: "플레이어는 먼저 튜토리얼을 완료해야 플롯에 추가할 수 있습니다!"
     error-occurred: "에러 발생! 다시 시도해주세요!"
     command-disabled: "비활성화된 커맨드입니다!"
     no-plots-left: "이 도시 프로젝트에 남아있는 플롯이 없습니다. 다른 프로젝트를 선택해주세요."
@@ -388,5 +390,27 @@ tutorials:
         - 'Happy building! ☺'
       stage-10-tasks:
         - 'Read all tips on the plot and mark them as read.'
+# -----------------------------------------------------
+# | Database
+# -----------------------------------------------------
+database:
+  city-project:
+    example-city:
+      name: 'Example City'
+      description: 'Some description'
+  country:
+    AT:
+      name: 'Austria'
+    CH:
+      name: 'Switzerland'
+    LI:
+      name: 'Liechtenstein'
+  difficulty:
+    easy:
+      name: 'Easy'
+    medium:
+      name: 'Medium'
+    hard:
+      name: 'Hard'
 # NOTE: Do not change
-config-version: 2.0
+config-version: 2.4

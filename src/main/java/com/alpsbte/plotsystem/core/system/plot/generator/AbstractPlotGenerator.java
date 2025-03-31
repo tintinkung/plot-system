@@ -38,13 +38,13 @@ import com.alpsbte.plotsystem.utils.io.ConfigPaths;
 import com.alpsbte.plotsystem.utils.io.ConfigUtil;
 import com.alpsbte.plotsystem.utils.io.LangPaths;
 import com.alpsbte.plotsystem.utils.io.LangUtil;
-import com.fastasyncworldedit.core.FaweAPI;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.mask.BlockTypeMask;
 import com.sk89q.worldedit.function.mask.Mask;
 import com.sk89q.worldedit.function.mask.RegionMask;
@@ -54,6 +54,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.math.Vector2;
 import com.sk89q.worldedit.regions.CylinderRegion;
 import com.sk89q.worldedit.regions.Polygonal2DRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.block.BlockTypes;
@@ -67,18 +68,18 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public abstract class AbstractPlotGenerator {
     protected final AbstractPlot plot;
@@ -89,28 +90,31 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Generates a new plot in the plot world
-     * @param plot - plot which should be generated
+     *
+     * @param plot    - plot which should be generated
      * @param builder - builder of the plot
      */
-    public AbstractPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder) throws SQLException {
-        this(plot, builder, builder.getPlotTypeSetting());
+    public AbstractPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder) {
+        this(plot, builder, builder.getPlotType());
     }
 
     /**
      * Generates a new plot in the given world
-     * @param plot - plot which should be generated
-     * @param builder - builder of the plot
+     *
+     * @param plot     - plot which should be generated
+     * @param builder  - builder of the plot
      * @param plotType - type of the plot
      */
-    public AbstractPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder, @NotNull PlotType plotType) throws SQLException {
+    public AbstractPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder, @NotNull PlotType plotType) {
         this(plot, builder, plotType, plot.getVersion() <= 2 || plotType.hasOnePlotPerWorld() ? new OnePlotWorld(plot) : new CityPlotWorld((Plot) plot));
     }
 
     /**
      * Generates a new plot in the given world
-     * @param plot - plot which should be generated
+     *
+     * @param plot    - plot which should be generated
      * @param builder - builder of the plot
-     * @param world - world of the plot
+     * @param world   - world of the plot
      */
     private AbstractPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder, @NotNull PlotType plotType, @NotNull PlotWorld world) {
         this.plot = plot;
@@ -125,7 +129,7 @@ public abstract class AbstractPlotGenerator {
                 if (plotType.hasOnePlotPerWorld() || !world.isWorldGenerated()) {
                     new PlotWorldGenerator(world.getWorldName());
                 } else if (!world.isWorldLoaded() && !world.loadWorld()) throw new Exception("Could not load world");
-                generateOutlines(plot.getOutlinesSchematic(), plot.getVersion() >= 3 ? plot.getEnvironmentSchematic() : null);
+                generateOutlines();
                 createPlotProtection();
             } catch (Exception ex) {
                 exception = ex;
@@ -147,6 +151,7 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Executed before plot generation
+     *
      * @return true if initialization was successful
      */
     protected abstract boolean init();
@@ -154,22 +159,19 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Generates plot schematic and outlines
-     * @param plotSchematic - plot schematic file
-     * @param environmentSchematic - environment schematic file
      */
-    protected void generateOutlines(@NotNull File plotSchematic, @Nullable File environmentSchematic) throws IOException, WorldEditException, SQLException {
+    protected void generateOutlines() throws IOException, WorldEditException {
         Mask airMask = new BlockTypeMask(BukkitAdapter.adapt(world.getBukkitWorld()), BlockTypes.AIR);
-        if(plotVersion >= 3 && plotType.hasEnvironment() && environmentSchematic != null && environmentSchematic.exists()){
-            pasteSchematic(airMask, environmentSchematic, world, false);
-        }
-        pasteSchematic(airMask, plotSchematic, world, true);
+        if (plotVersion >= 3 && plotType.hasEnvironment()) {
+            pasteSchematic(airMask, plot.getInitialSchematicBytes(), world, false);
+        } else pasteSchematic(airMask, PlotUtils.getOutlinesSchematicBytes(plot, world.getBukkitWorld()), world, true);
     }
 
 
     /**
      * Creates plot protection
      */
-    protected void createPlotProtection() throws StorageException, SQLException, IOException {
+    protected void createPlotProtection() throws StorageException {
         RegionContainer regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
         RegionManager regionManager = regionContainer.get(BukkitAdapter.adapt(world.getBukkitWorld()));
 
@@ -202,11 +204,12 @@ public abstract class AbstractPlotGenerator {
             regionManager.addRegion(protectedBuildRegion);
             regionManager.addRegion(protectedRegion);
             regionManager.saveChanges();
-        } else Bukkit.getLogger().log(Level.WARNING, "Region Manager is null!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Region Manager is null!"));
     }
 
     /**
      * Sets the permissions for the plot build region only
+     *
      * @param region build region
      */
     protected void setBuildRegionPermissions(ProtectedRegion region) {
@@ -218,6 +221,7 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Sets the permissions for the whole plot region
+     *
      * @param region plot region
      */
     protected void setRegionPermissions(ProtectedRegion region) {
@@ -233,6 +237,7 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Reads the blocked commands for the plot region from the config
+     *
      * @param config commands.yml config
      * @return list of blocked commands
      */
@@ -244,7 +249,8 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Gets invoked when generation is completed
-     * @param failed - true if generation has failed
+     *
+     * @param failed      - true if generation has failed
      * @param unloadWorld - try to unload world after generation
      * @throws SQLException - caused by a database exception
      */
@@ -256,12 +262,13 @@ public abstract class AbstractPlotGenerator {
 
     /**
      * Gets invoked when an exception has occurred
+     *
      * @param ex - caused exception
      */
     protected void onException(Throwable ex) {
-        Bukkit.getLogger().log(Level.SEVERE, "An error occurred while generating plot!", ex);
+        PlotSystem.getPlugin().getComponentLogger().error(text("An error occurred while generating plot!"), ex);
         builder.getPlayer().sendMessage(Utils.ChatUtils.getAlertFormat(LangUtil.getInstance().get(builder.getPlayer(), LangPaths.Message.Error.ERROR_OCCURRED)));
-        builder.getPlayer().playSound(builder.getPlayer().getLocation(), Utils.SoundUtils.ERROR_SOUND,1,1);
+        builder.getPlayer().playSound(builder.getPlayer().getLocation(), Utils.SoundUtils.ERROR_SOUND, 1, 1);
     }
 
 
@@ -281,33 +288,43 @@ public abstract class AbstractPlotGenerator {
     }
 
 
-
     /**
      * Pastes the schematic to the plot center in the given world
-     * @param pasteMask - sets a mask for the paste operation, can be null
+     *
+     * @param pasteMask     - sets a mask for the paste operation, can be null
      * @param schematicFile - plot/environment schematic file
-     * @param world - world to paste in
-     * @param clearArea - clears the plot area with air before pasting
+     * @param world         - world to paste in
+     * @param clearArea     - clears the plot area with air before pasting
      */
-    public static void pasteSchematic(@Nullable Mask pasteMask, File schematicFile, PlotWorld world, boolean clearArea) throws IOException, WorldEditException, SQLException {
-        if (world.loadWorld()) {
-            World weWorld = new BukkitWorld(world.getBukkitWorld());
+    public static void pasteSchematic(@Nullable Mask pasteMask, byte[] schematicFile, PlotWorld world, boolean clearArea) throws IOException, WorldEditException {
+        // load world
+        if (!world.loadWorld()) return;
+        World weWorld = new BukkitWorld(world.getBukkitWorld());
+
+        // set outline region with air
+        if (clearArea) {
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world.getBukkitWorld()))) {
-                if (clearArea) {
-                    Polygonal2DRegion polyRegion = new Polygonal2DRegion(weWorld, world.getPlot().getOutline(), 0, PlotWorld.MAX_WORLD_HEIGHT);
-                    editSession.setMask(new RegionMask(polyRegion));
-                    editSession.setBlocks(polyRegion, Objects.requireNonNull(BlockTypes.AIR).getDefaultState());
-                }
+                Polygonal2DRegion polyRegion = new Polygonal2DRegion(weWorld, world.getPlot().getOutline(), 0, PlotWorld.MAX_WORLD_HEIGHT);
+                editSession.setMask(new RegionMask(polyRegion));
+                editSession.setBlocks((Region) polyRegion, Objects.requireNonNull(BlockTypes.AIR).getDefaultState());
             }
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world.getBukkitWorld()))) {
-                if(pasteMask != null) editSession.setMask(pasteMask);
-                Clipboard clipboard = FaweAPI.load(schematicFile);
-                Operation clipboardHolder = new ClipboardHolder(clipboard)
-                        .createPaste(editSession)
-                        .to(BlockVector3.at(world.getPlot().getCenter().x(), world.getPlotHeight(), world.getPlot().getCenter().z()))
-                        .build();
-                Operations.complete(clipboardHolder);
-            }
+        }
+
+        // load schematic
+        Clipboard clipboard;
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(schematicFile);
+        try (ClipboardReader reader = AbstractPlot.CLIPBOARD_FORMAT.getReader(inputStream)) {
+            clipboard = reader.read();
+        }
+
+        // paste schematic
+        try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world.getBukkitWorld()))) {
+            if (pasteMask != null) editSession.setMask(pasteMask);
+            Operation clipboardHolder = new ClipboardHolder(clipboard)
+                    .createPaste(editSession)
+                    .to(BlockVector3.at(world.getPlot().getCenter().x(), world.getPlotHeight(), world.getPlot().getCenter().z()))
+                    .build();
+            Operations.complete(clipboardHolder);
         }
     }
 }

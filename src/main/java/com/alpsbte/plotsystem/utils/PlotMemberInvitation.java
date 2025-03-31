@@ -33,17 +33,14 @@ import com.alpsbte.plotsystem.utils.io.LangUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
-import static com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils.TEXT_HIGHLIGHT_END;
-import static com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils.TEXT_HIGHLIGHT_START;
+import static com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils.TEXT_HIGHLIGHT_END;
+import static com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils.TEXT_HIGHLIGHT_START;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -58,7 +55,7 @@ public class PlotMemberInvitation {
     private final BukkitScheduler scheduler = PlotSystem.getPlugin().getServer().getScheduler();
     private int taskID;
 
-    public PlotMemberInvitation(Player invitee, Plot plot) throws SQLException {
+    public PlotMemberInvitation(Player invitee, Plot plot) {
         this.invitee = invitee;
         this.plot = plot;
 
@@ -89,18 +86,14 @@ public class PlotMemberInvitation {
         PlotMemberInvitation invitation = this;
         taskID = scheduler.scheduleSyncDelayedTask(PlotSystem.getPlugin(), () -> {
             invitationsList.remove(invitation);
-            try {
-                invitee.sendMessage(Utils.ChatUtils.getAlertFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(invitee,
-                        LangPaths.Message.Error.PLAYER_INVITE_EXPIRED, TEXT_HIGHLIGHT_START + plot.getPlotOwner().getName() + TEXT_HIGHLIGHT_END))));
-                plot.getPlotOwner().getPlayer().sendMessage(Utils.ChatUtils.getAlertFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(plot.getPlotOwner().getPlayer(),
-                        LangPaths.Message.Error.PLAYER_INVITE_TO_EXPIRED, TEXT_HIGHLIGHT_START + invitee.getName() + TEXT_HIGHLIGHT_END))));
-            } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
-            }
+            invitee.sendMessage(Utils.ChatUtils.getAlertFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(invitee,
+                    LangPaths.Message.Error.PLAYER_INVITE_EXPIRED, TEXT_HIGHLIGHT_START + plot.getPlotOwner().getName() + TEXT_HIGHLIGHT_END))));
+            plot.getPlotOwner().getPlayer().sendMessage(Utils.ChatUtils.getAlertFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(plot.getPlotOwner().getPlayer(),
+                    LangPaths.Message.Error.PLAYER_INVITE_TO_EXPIRED, TEXT_HIGHLIGHT_START + invitee.getName() + TEXT_HIGHLIGHT_END))));
         }, 20 * 30);
     }
 
-    public void acceptInvite() throws SQLException {
+    public void acceptInvite() {
         Builder builder = Builder.byUUID(invitee.getUniqueId());
         if (builder.getFreeSlot() != null) {
             plot.addPlotMember(Builder.byUUID(invitee.getUniqueId()));
@@ -119,7 +112,7 @@ public class PlotMemberInvitation {
         }
     }
 
-    public void rejectInvite() throws SQLException {
+    public void rejectInvite() {
         invitee.sendMessage(Utils.ChatUtils.getInfoFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(invitee, LangPaths.Message.Info.PLAYER_INVITE_REJECTED,
                 TEXT_HIGHLIGHT_START + plot.getPlotOwner().getName() + TEXT_HIGHLIGHT_END))));
         plot.getPlotOwner().getPlayer().sendMessage(Utils.ChatUtils.getAlertFormat(AlpsUtils.deserialize(LangUtil.getInstance().get(plot.getPlotOwner().getPlayer(),

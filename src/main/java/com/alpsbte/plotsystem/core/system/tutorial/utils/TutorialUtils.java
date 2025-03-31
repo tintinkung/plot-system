@@ -22,10 +22,9 @@
  *  SOFTWARE.
  */
 
-package com.alpsbte.plotsystem.core.system.tutorial;
+package com.alpsbte.plotsystem.core.system.tutorial.utils;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -39,18 +38,19 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public class TutorialUtils {
-    public static String TEXT_HIGHLIGHT_START = "<gold>", TEXT_HIGHLIGHT_END = "</gold>";
-    public static String TEXT_CLICK_HIGHLIGHT = "<underlined>";
+    public static final String TEXT_HIGHLIGHT_START = "<gold>", TEXT_HIGHLIGHT_END = "</gold>";
+    public static final String TEXT_CLICK_HIGHLIGHT = "<underlined>";
 
-    public static Component CHAT_PREFIX_COMPONENT = text("»", DARK_GRAY)
+    public static final Component CHAT_PREFIX_COMPONENT = text("»", DARK_GRAY)
             .append(text(" ", GRAY));
     public static Component CHAT_TASK_PREFIX_COMPONENT = text("[", DARK_GRAY)
             .append(text("Tutorial", GOLD).append(text("] ", DARK_GRAY)));
 
     /**
      * Set a block at a specific location
-     * @param world The world to set the block in
-     * @param vector The vector of the location
+     *
+     * @param world    The world to set the block in
+     * @param vector   The vector of the location
      * @param material The material of the block
      */
     public static void setBlockAt(World world, Vector vector, Material material) {
@@ -60,6 +60,7 @@ public class TutorialUtils {
 
     /**
      * Get a list of 3D vectors for the tip holograms
+     *
      * @param tutorialConfig the tutorial config file
      * @return A list of vector points
      */
@@ -76,6 +77,7 @@ public class TutorialUtils {
 
     /**
      * Get a list of documentation links which can be opened by clicking on the hologram
+     *
      * @param tutorialConfig the tutorial config file
      * @return A list of documentation links
      */

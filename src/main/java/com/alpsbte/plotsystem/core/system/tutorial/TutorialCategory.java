@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -38,9 +38,9 @@ public enum TutorialCategory {
         return id;
     }
 
-    public static TutorialCategory byId(int id){
-        for(TutorialCategory theme : values())
-            if(theme.getId() == id)
+    public static TutorialCategory byId(int id) {
+        for (TutorialCategory theme : values())
+            if (theme.getId() == id)
                 return theme;
         return null;
     }

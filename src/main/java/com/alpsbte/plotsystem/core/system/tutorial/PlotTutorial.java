@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -30,15 +30,17 @@ public interface PlotTutorial extends Tutorial {
 
     /**
      * This method is called when a schematic outline in the plot world is pasted.
-     * @param playerUUID uuid of the player
+     *
+     * @param playerUUID  uuid of the player
      * @param schematicId The schematic id
      */
     void onPlotSchematicPaste(UUID playerUUID, int schematicId);
 
     /**
      * This method is called when the building and WorldEdit permissions on the plot need to be changed.
-     * @param playerUUID uuid of the player
-     * @param isBuildingAllowed true if building is enabled, otherwise false
+     *
+     * @param playerUUID         uuid of the player
+     * @param isBuildingAllowed  true if building is enabled, otherwise false
      * @param isWorldEditAllowed true if WorldEdit is enabled, otherwise false
      */
     void onPlotPermissionChange(UUID playerUUID, boolean isBuildingAllowed, boolean isWorldEditAllowed);

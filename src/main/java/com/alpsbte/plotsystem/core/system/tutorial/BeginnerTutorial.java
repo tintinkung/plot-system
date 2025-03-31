@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@ import com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.events.BuildEvent
 import com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.events.commands.LineCmdEventTask;
 import com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.events.commands.WandCmdEventTask;
 import com.alpsbte.plotsystem.core.system.tutorial.stage.tasks.message.ChatMessageTask;
+import com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils;
 import com.alpsbte.plotsystem.utils.Utils;
 import com.alpsbte.plotsystem.utils.io.*;
 import net.kyori.adventure.text.Component;
@@ -50,35 +51,27 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.logging.Level;
 
-import static com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils.*;
-import static com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils.Sound;
+import static com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils.*;
+import static com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils.Sound;
 import static net.kyori.adventure.text.Component.text;
 import static com.alpsbte.alpslib.utils.AlpsUtils.deserialize;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
-import static net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY;
 import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 
 public class BeginnerTutorial extends AbstractPlotTutorial {
-    public BeginnerTutorial(Player player, int stageId) throws SQLException {
+    public BeginnerTutorial(Player player, int stageId) {
         super(player, TutorialCategory.BEGINNER.getId(), stageId);
     }
 
     @Override
     protected List<TutorialWorld> initWorlds() {
-        try {
-            return Arrays.asList(
-                    new TutorialWorld(getId(), 0, Utils.getSpawnLocation().getWorld().getName()),
-                    new TutorialWorld(getId(), 1, plot.getWorld().getWorldName()),
-                    new TutorialWorld(getId(), 2, Utils.getSpawnLocation().getWorld().getName())
-            );
-        } catch (SQLException ex) {
-            onException(ex);
-        }
-        return null;
+        return Arrays.asList(
+                new TutorialWorld(getId(), 0, Utils.getSpawnLocation().getWorld().getName()),
+                new TutorialWorld(getId(), 1, tutorialPlot.getWorld().getWorldName()),
+                new TutorialWorld(getId(), 2, Utils.getSpawnLocation().getWorld().getName())
+        );
     }
 
     @Override
@@ -137,7 +130,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         protected List<String> setTasks() {
             return LangUtil.getInstance().getList(getPlayer(), LangPaths.Tutorials.Beginner.STAGE1_TASKS,
                     TEXT_HIGHLIGHT_START + ConfigUtil.getInstance().configs[0].getString(ConfigPaths.TUTORIAL_NPC_NAME) +
-                    TEXT_HIGHLIGHT_END);
+                            TEXT_HIGHLIGHT_END);
         }
 
         @Override
@@ -149,7 +142,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         public StageTimeline getTimeline() {
             return new StageTimeline(getPlayer())
                     .delay(Delay.TIMELINE_START)
-                    .interactNPC(deserialize(getTasks().get(0)))
+                    .interactNPC(deserialize(getTasks().getFirst()))
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
                     .sendChatMessage(deserialize(getMessages().get(1)), Sound.NPC_TALK, true)
                     .sendChatMessage(deserialize(getMessages().get(2)), Sound.NPC_TALK, true)
@@ -200,13 +193,13 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                     .delay(Delay.TIMELINE_START)
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
                     .sendChatMessage(deserialize(getMessages().get(1)), Sound.NPC_TALK, true)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(2)),
                             "",
                             new ChatMessageTask.ClickableTaskMessage(deserialize(getMessages().get(3)).color(GRAY),
                                     text(GOOGLE_MAPS, GRAY), ClickEvent.openUrl(getPlot().getGoogleMapsLink()))
                     }, Sound.NPC_TALK, true)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(4)),
                             "",
                             new ChatMessageTask.ClickableTaskMessage(deserialize(getMessages().get(5)).color(GRAY),
@@ -238,37 +231,37 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         @Override
         protected List<String> setTasks() {
             return LangUtil.getInstance().getList(getPlayer(), LangPaths.Tutorials.Beginner.STAGE3_TASKS,
-                     TEXT_HIGHLIGHT_START + "4" + TEXT_HIGHLIGHT_END,
-                     TEXT_HIGHLIGHT_START + "/tpll" + TEXT_HIGHLIGHT_END);
+                    TEXT_HIGHLIGHT_START + "4" + TEXT_HIGHLIGHT_END,
+                    TEXT_HIGHLIGHT_START + "/tpll" + TEXT_HIGHLIGHT_END);
         }
 
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
             return Collections.singletonList(
-                    new PlotTutorialHologram(getPlayer(), 0, getMessages().get(4), 3)
+                    new PlotTutorialHologram(getPlayer(), getId(), 0, getMessages().get(4), 3)
             );
         }
 
         @Override
-        public StageTimeline getTimeline() throws SQLException, IOException {
+        public StageTimeline getTimeline() throws IOException {
             return new StageTimeline(getPlayer())
                     .delay(Delay.TIMELINE_START)
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(1)),
                             "",
                             new ChatMessageTask.ClickableTaskMessage(deserialize(getMessages().get(2)).color(GRAY),
                                     text(Stage2.GOOGLE_MAPS, GRAY), ClickEvent.openUrl(getPlot().getGoogleMapsLink()))
                     }, Sound.NPC_TALK, false)
                     .delay(Delay.TASK_START)
-                    .createHolograms(getHolograms().get(0))
-                    .addTeleportEvent(deserialize(getTasks().get(0)), getPlotPoints(getPlot()), 1, (teleportPoint, isCorrect) -> {
+                    .createHolograms(getHolograms().getFirst())
+                    .addTeleportEvent(deserialize(getTasks().getFirst()), getPlotPoints(getPlot()), 1, (teleportPoint, isCorrect) -> {
                         if (isCorrect) {
                             setBlockAt(getPlayer().getWorld(), teleportPoint, Material.LIME_CONCRETE_POWDER);
                             getPlayer().playSound(new Location(getPlayer().getWorld(), teleportPoint.getBlockX(), teleportPoint.getBlockY(), teleportPoint.getBlockZ()),
                                     Sound.ASSIGNMENT_COMPLETED, 1f, 1f);
                         } else {
-                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[] { deserialize(getMessages().get(3)) }, false);
+                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[]{deserialize(getMessages().get(3))}, false);
                             getPlayer().playSound(new Location(getPlayer().getWorld(), teleportPoint.getBlockX(), teleportPoint.getBlockY(), teleportPoint.getBlockZ()),
                                     Sound.ASSIGNMENT_WRONG, 1f, 1f);
                         }
@@ -312,7 +305,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
                     .sendChatMessage(deserialize(getMessages().get(1)), Sound.NPC_TALK, false)
                     .delay(Delay.TASK_START)
-                    .addTask(new WandCmdEventTask(getPlayer(), deserialize(getTasks().get(0))))
+                    .addTask(new WandCmdEventTask(getPlayer(), deserialize(getTasks().getFirst())))
                     .delay(Delay.TASK_END)
                     .sendChatMessage(deserialize(getMessages().get(2)), Sound.NPC_TALK, true);
         }
@@ -351,7 +344,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         }
 
         @Override
-        public StageTimeline getTimeline() throws SQLException {
+        public StageTimeline getTimeline() {
             List<Vector> buildingPoints = getPlotPoints(getPlot());
 
             // Map building points to lines
@@ -364,14 +357,14 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
             return new StageTimeline(getPlayer())
                     .delay(Delay.TIMELINE_START)
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(1)),
                             "",
                             deserialize(getMessages().get(2))
                     }, Sound.NPC_TALK, false)
                     .delay(Delay.TASK_START)
                     .addTask(new PlotPermissionChangeTask(getPlayer(), false, true))
-                    .addTask(new LineCmdEventTask(getPlayer(), deserialize(getTasks().get(0)), BASE_BLOCK, BASE_BLOCK_ID, buildingLinePoints, ((minPoint, maxPoint) -> {
+                    .addTask(new LineCmdEventTask(getPlayer(), deserialize(getTasks().getFirst()), BASE_BLOCK, BASE_BLOCK_ID, buildingLinePoints, ((minPoint, maxPoint) -> {
                         if (minPoint != null && maxPoint != null) {
                             buildingLinePoints.remove(minPoint);
 
@@ -379,7 +372,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                             setBlockAt(getPlayer().getWorld(), maxPoint, Material.LIME_CONCRETE_POWDER);
                             getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_COMPLETED, 1f, 1f);
                         } else {
-                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[] { deserialize(getMessages().get(3)) }, false);
+                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[]{deserialize(getMessages().get(3))}, false);
                             getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_WRONG, 1f, 1f);
                         }
                     })))
@@ -414,7 +407,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
 
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
-            return Collections.singletonList(new PlotTutorialHologram(getPlayer(), 13, getMessages().get(7), 4));
+            return Collections.singletonList(new PlotTutorialHologram(getPlayer(), getId(), 13, getMessages().get(7), 4));
         }
 
         @Override
@@ -423,21 +416,21 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                     .delay(Delay.TIMELINE_START)
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
                     .sendChatMessage(deserialize(getMessages().get(1)), Sound.NPC_TALK, true)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(2)),
                             "",
                             new ChatMessageTask.ClickableTaskMessage(deserialize(getMessages().get(3)).color(GRAY),
                                     text(Stage2.GOOGLE_EARTH, GRAY), ClickEvent.openUrl(getPlot().getGoogleEarthLink()))
                     }, Sound.NPC_TALK, false)
                     .delay(Delay.TASK_START)
-                    .createHolograms(getHolograms().get(0));
-            stage.addPlayerChatEvent(deserialize(getTasks().get(0)), HEIGHT, HEIGHT_OFFSET, 3, (isCorrect, attemptsLeft) -> {
+                    .createHolograms(getHolograms().getFirst());
+            stage.addPlayerChatEvent(deserialize(getTasks().getFirst()), HEIGHT, HEIGHT_OFFSET, 3, (isCorrect, attemptsLeft) -> {
                 if (!isCorrect && attemptsLeft > 0) {
-                    ChatMessageTask.sendTaskMessage(getPlayer(), new Object[] { deserialize(getMessages().get(6)) }, false);
+                    ChatMessageTask.sendTaskMessage(getPlayer(), new Object[]{deserialize(getMessages().get(6))}, false);
                     getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_WRONG, 1f, 1f);
                 } else {
-                    ChatMessageTask.sendTaskMessage(getPlayer(), new Object[] { isCorrect ? deserialize(getMessages().get(4)) :
-                            deserialize(getMessages().get(5)) }, false);
+                    ChatMessageTask.sendTaskMessage(getPlayer(), new Object[]{isCorrect ? deserialize(getMessages().get(4)) :
+                            deserialize(getMessages().get(5))}, false);
                     getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_COMPLETED, 1f, 1f);
                     stage.delay(Delay.TASK_END);
                 }
@@ -460,8 +453,8 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         public List<String> setMessages() {
             return LangUtil.getInstance().getList(getPlayer(), LangPaths.Tutorials.Beginner.STAGE7_MESSAGES,
                     "//stack",
-                     "//line",
-                     "//sel convex");
+                    "//line",
+                    "//sel convex");
         }
 
         @Override
@@ -472,11 +465,11 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
             return Arrays.asList(
-                    new PlotTutorialHologram(getPlayer(), 1, getMessages().get(1)),
-                    new PlotTutorialHologram(getPlayer(), 2, getMessages().get(2)),
-                    new PlotTutorialHologram(getPlayer(), 3, getMessages().get(4), 2),
-                    new PlotTutorialHologram(getPlayer(), 4, getMessages().get(5), 5),
-                    new PlotTutorialHologram(getPlayer(), 5, getMessages().get(6))
+                    new PlotTutorialHologram(getPlayer(), getId(), 1, getMessages().get(1)),
+                    new PlotTutorialHologram(getPlayer(), getId(), 2, getMessages().get(2)),
+                    new PlotTutorialHologram(getPlayer(), getId(), 3, getMessages().get(4), 2),
+                    new PlotTutorialHologram(getPlayer(), getId(), 4, getMessages().get(5), 5),
+                    new PlotTutorialHologram(getPlayer(), getId(), 5, getMessages().get(6))
             );
         }
 
@@ -486,13 +479,13 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                     .delay(Delay.TIMELINE_START)
                     .addTask(new PlotSchematicPasteTask(getPlayer(), 3)).delay(1)
                     .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
-                    .createHolograms(deserialize(getTasks().get(0)), getHolograms().get(0), getHolograms().get(1))
+                    .createHolograms(deserialize(getTasks().getFirst()), getHolograms().get(0), getHolograms().get(1))
                     .delay(Delay.TASK_END)
                     .deleteHolograms()
                     .delay(2)
                     .addTask(new PlotSchematicPasteTask(getPlayer(), 4)).delay(1)
                     .sendChatMessage(deserialize(getMessages().get(3)), Sound.NPC_TALK, true)
-                    .createHolograms(deserialize(getTasks().get(0)), getHolograms().get(2), getHolograms().get(3), getHolograms().get(4))
+                    .createHolograms(deserialize(getTasks().getFirst()), getHolograms().get(2), getHolograms().get(3), getHolograms().get(4))
                     .delay(Delay.TASK_END);
         }
     }
@@ -520,8 +513,8 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
             return Arrays.asList(
-                    new PlotTutorialHologram(getPlayer(), 6, getMessages().get(2)),
-                    new PlotTutorialHologram(getPlayer(), 7, getMessages().get(3))
+                    new PlotTutorialHologram(getPlayer(), getId(), 6, getMessages().get(2)),
+                    new PlotTutorialHologram(getPlayer(), getId(), 7, getMessages().get(3))
             );
         }
 
@@ -534,11 +527,11 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
                     .sendChatMessage(deserialize(getMessages().get(1)), Sound.NPC_TALK, true)
                     .createHolograms(getHolograms().get(0), getHolograms().get(1))
                     .addTask(new PlotPermissionChangeTask(getPlayer(), true, false))
-                    .addTask(new BuildEventTask(getPlayer(), deserialize(getTasks().get(0)), getWindowBuildPoints(), (blockPos, isCorrect) -> {
+                    .addTask(new BuildEventTask(getPlayer(), deserialize(getTasks().getFirst()), getWindowBuildPoints(), (blockPos, isCorrect) -> {
                         if (isCorrect) {
                             getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_COMPLETED, 1f, 1f);
                         } else {
-                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[] { deserialize(getMessages().get(4)) }, false);
+                            ChatMessageTask.sendTaskMessage(getPlayer(), new Object[]{deserialize(getMessages().get(4))}, false);
                             getPlayer().playSound(getPlayer().getLocation(), Sound.ASSIGNMENT_WRONG, 1f, 1f);
                         }
                     }))
@@ -572,9 +565,9 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
             return Arrays.asList(
-                    new PlotTutorialHologram(getPlayer(), 8, getMessages().get(1)),
-                    new PlotTutorialHologram(getPlayer(), 9, getMessages().get(2), 1),
-                    new PlotTutorialHologram(getPlayer(), 10, getMessages().get(3))
+                    new PlotTutorialHologram(getPlayer(), getId(), 8, getMessages().get(1)),
+                    new PlotTutorialHologram(getPlayer(), getId(), 9, getMessages().get(2), 1),
+                    new PlotTutorialHologram(getPlayer(), getId(), 10, getMessages().get(3))
             );
         }
 
@@ -583,8 +576,8 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
             return new StageTimeline(getPlayer())
                     .delay(Delay.TIMELINE_START)
                     .addTask(new PlotSchematicPasteTask(getPlayer(), 6)).delay(1)
-                    .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
-                    .createHolograms(deserialize(getTasks().get(0)), getHolograms().get(0), getHolograms().get(1), getHolograms().get(2))
+                    .sendChatMessage(deserialize(getMessages().getFirst()), Sound.NPC_TALK, true)
+                    .createHolograms(deserialize(getTasks().getFirst()), getHolograms().get(0), getHolograms().get(1), getHolograms().get(2))
                     .delay(Delay.TASK_END);
         }
     }
@@ -614,8 +607,8 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
         @Override
         protected List<AbstractTutorialHologram> setHolograms() {
             return Arrays.asList(
-                    new PlotTutorialHologram(getPlayer(), 11, getMessages().get(1)),
-                    new PlotTutorialHologram(getPlayer(), 12, getMessages().get(2))
+                    new PlotTutorialHologram(getPlayer(), getId(), 11, getMessages().get(1)),
+                    new PlotTutorialHologram(getPlayer(), getId(), 12, getMessages().get(2))
             );
         }
 
@@ -624,17 +617,17 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
             return new StageTimeline(getPlayer())
                     .delay(Delay.TIMELINE_START)
                     .addTask(new PlotSchematicPasteTask(getPlayer(), 7)).delay(1)
-                    .sendChatMessage(deserialize(getMessages().get(0)), Sound.NPC_TALK, true)
-                    .createHolograms(deserialize(getTasks().get(0)), getHolograms().get(0), getHolograms().get(1))
+                    .sendChatMessage(deserialize(getMessages().getFirst()), Sound.NPC_TALK, true)
+                    .createHolograms(deserialize(getTasks().getFirst()), getHolograms().get(0), getHolograms().get(1))
                     .delay(Delay.TASK_END)
                     .deleteHolograms()
                     .delay(2)
-                    .sendChatMessage(new Object[] {
+                    .sendChatMessage(new Object[]{
                             deserialize(getMessages().get(3)),
                             "",
                             new ChatMessageTask.ClickableTaskMessage(deserialize(TEXT_CLICK_HIGHLIGHT + getMessages().get(4)).color(GRAY),
-                                deserialize(LangUtil.getInstance().get(getPlayer(), LangPaths.Note.Action.READ_MORE)).color(GRAY).append(text("...")),
-                                ClickEvent.openUrl(getDocumentationLinks(ConfigUtil.getTutorialInstance().getBeginnerTutorial()).get(6))),
+                                    deserialize(LangUtil.getInstance().get(getPlayer(), LangPaths.Note.Action.READ_MORE)).color(GRAY).append(text("...")),
+                                    ClickEvent.openUrl(getDocumentationLinks(ConfigUtil.getTutorialInstance().getBeginnerTutorial()).get(6))),
                     }, Sound.NPC_TALK, true).delay(2)
                     .teleport(2).delay(2)
                     .sendChatMessage(deserialize(getMessages().get(5)), Sound.NPC_TALK, true)
@@ -645,9 +638,10 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
 
     /**
      * Get the four plot building points from the config and convert them to Vector
+     *
      * @return list of building points as Vector
      */
-    private static List<Vector> getPlotPoints(TutorialPlot plot) throws SQLException {
+    private static List<Vector> getPlotPoints(TutorialPlot plot) {
         // Read coordinates from config
         FileConfiguration config = ConfigUtil.getTutorialInstance().getBeginnerTutorial();
         List<String> plotPointsAsString = Arrays.asList(
@@ -689,7 +683,7 @@ public class BeginnerTutorial extends AbstractPlotTutorial {
             try {
                 blockData = Bukkit.createBlockData(pointsSplit[3].trim().toLowerCase());
             } catch (IllegalArgumentException ex) {
-                Bukkit.getLogger().log(Level.WARNING, "Could not read tutorial config value for material.", ex);
+                PlotSystem.getPlugin().getComponentLogger().warn(text("Could not read tutorial config value for material!"), ex);
                 return;
             }
             windowPoints.put(new Vector(x, y, z), blockData);

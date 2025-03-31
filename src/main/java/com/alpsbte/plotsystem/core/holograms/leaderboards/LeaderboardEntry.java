@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,28 @@
  *  SOFTWARE.
  */
 
-package com.alpsbte.plotsystem.core.system.tutorial.stage;
+package com.alpsbte.plotsystem.core.holograms.leaderboards;
 
-import com.alpsbte.plotsystem.core.system.tutorial.connector.AbstractNpc;
-// import com.alpsbte.alpslib.npc.AbstractNpc;
-import com.alpsbte.plotsystem.PlotSystem;
-import com.alpsbte.plotsystem.utils.io.ConfigPaths;
-import com.alpsbte.plotsystem.utils.io.LangPaths;
-import com.alpsbte.plotsystem.utils.io.LangUtil;
+public class LeaderboardEntry {
+    private final int score;
+    private final int position;
+    private final int totalPositions;
 
-import java.util.UUID;
-
-import static net.md_5.bungee.api.ChatColor.*;
-
-public class TutorialNPC extends AbstractNpc {
-    public TutorialNPC(String id) {
-        super(id, PlotSystem.getPlugin().getConfig().getString(ConfigPaths.TUTORIAL_NPC_TEXTURE),
-                PlotSystem.getPlugin().getConfig().getString(ConfigPaths.TUTORIAL_NPC_SIGNATURE));
+    public LeaderboardEntry(int score, int position, int totalPositions) {
+        this.score = score;
+        this.position = position;
+        this.totalPositions = totalPositions;
     }
 
-    @Override
-    public String getDisplayName(UUID playerUUID) {
-        return GOLD + BOLD.toString() + PlotSystem.getPlugin().getConfig().getString(ConfigPaths.TUTORIAL_NPC_NAME);
+    public int getScore() {
+        return score;
     }
 
-    @Override
-    public String getActionTitle(UUID playerUUID) {
-        return GRAY + "(" + LangUtil.getInstance().get(playerUUID, LangPaths.Note.Action.RIGHT_CLICK) + ")";
+    public int getPosition() {
+        return position;
+    }
+
+    public int getTotalPosition() {
+        return totalPositions;
     }
 }

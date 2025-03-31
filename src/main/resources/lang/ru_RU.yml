@@ -26,7 +26,6 @@ plot:
   status: "Статус"
   score: "Оценка"
   total-score: "Общая Оценка"
-  effective-score: "Фактическая Оценка"
   completed-plots: "Завершённые Участки"
   group-system:
     empty-member-slot: "Пустое место для участника"
@@ -99,7 +98,6 @@ menu-title:
   leave-plot: "Покинуть Участок"
   review-plots: "Оценить Участки"
   review-plot: "Оценить Участок #{0}"
-  enter-player-name: "Введите имя игрока"
   select-language: "Выберите Язык"
   select-plot-type: 'Select Plot Type'
   select-focus-mode: "Select Focus Mode"
@@ -111,6 +109,7 @@ menu-title:
   tutorial-stages: 'Tutorial Stages'
   tutorial-end: 'End Tutorial'
   tutorial-beginner: 'Get Started'
+  companion-random: 'Случайный выбор'
 # -----------------------------------------------------
 # | Menu Descriptions
 # -----------------------------------------------------
@@ -125,7 +124,7 @@ menu-description:
   teleport-desc: "Нажмите, чтобы телепортироваться к участку"
   abandon-desc: "Нажмите, чтобы сбросить ваш участок и отдать его кому-нибудь другому"
   undo-submit-desc: "Нажмите, чтобы отменить вашу заявку на оценку"
-  manage-members-desc: "Нажмите, чтобы открыть меню Участников Участка, где вы можете добавить%newline%или удалить других игроков с вашего участка"
+  manage-members-desc: "Нажмите, чтобы открыть меню Участников Участка, где вы можете добавить или удалить других игроков с вашего участка"
   feedback-desc: "Нажмите, чтобы просмотреть оценку вашего участка"
   custom-heads-desc: "Нажмите, чтобы открыть меню голов и получить кастомные головы"
   banner-maker-desc: "Click to create and save your own banners"
@@ -141,9 +140,10 @@ menu-description:
   select-city-inspiration-mode-desc: "Build on a floating island with surrounding environment and other players plots that got scanned near the own plot.%newline%%newline%+ Environment%newline%+ Neighboring plots"
   filter-desc: "Show All"
   information-desc: "A plot can receive a maximum of 20 points. If the plot receives less than 8 points or one category has 0 points, the plot is rejected and the builder gets the plot back to improve it. If the plot receives 0 points, it gets abandoned."
-  tutorials-desc: 'Learn the basics of the BuildTheEarth%newline%project and enhance your building skills%newline%with tutorials on various topics.'
+  tutorials-desc: 'Learn the basics of the BuildTheEarth project and enhance your building skills with tutorials on various topics.'
   tutorial-end-desc: 'Your progress will be saved.'
-  tutorial-beginner-desc: 'Learn the basics how to build%newline%for the BuildTheEarth project.'
+  tutorial-beginner-desc: 'Learn the basics how to build for the BuildTheEarth project.'
+  companion-random-desc: 'Нажмите, чтобы выбрать случайным образом.'
 # -----------------------------------------------------
 # | Review
 # -----------------------------------------------------
@@ -197,6 +197,7 @@ note:
     click-to-show-plots: "§6Нажмите,чтобы показать ваши участки..."
     click-to-play-with-friends: "§7Хотите играть с друзьями? §6Нажмите здесь..."
     tutorial-show-stages: 'Show Stages'
+    click-to-open-plots-menu: "Нажмите, чтобы открыть меню участков..."
 # -----------------------------------------------------
 # | Messages
 # -----------------------------------------------------
@@ -260,6 +261,7 @@ message:
     player-invite-to-rejected: '{0} has rejected your invitation.'
     player-needs-to-be-on-plot: "Вам нужно быть на участке чтобы использовать это!"
     player-needs-higher-score: "Вам нужна более высокая оценка чтобы строить на этом уровне сложности."
+    player-missing-tutorial: "Чтобы стать участником сюжета, игрок должен сначала пройти обучение!"
     error-occurred: "Произошла ошибка! Пожалуйста, попробуйте снова!"
     command-disabled: "Эта команда отключена!!"
     no-plots-left: "У этого градостроительного проекта больше не осталось участков. Пожалуйста, выберите другой проект."
@@ -388,5 +390,27 @@ tutorials:
         - 'Happy building! ☺'
       stage-10-tasks:
         - 'Read all tips on the plot and mark them as read.'
+# -----------------------------------------------------
+# | Database
+# -----------------------------------------------------
+database:
+  city-project:
+    example-city:
+      name: 'Example City'
+      description: 'Some description'
+  country:
+    AT:
+      name: 'Austria'
+    CH:
+      name: 'Switzerland'
+    LI:
+      name: 'Liechtenstein'
+  difficulty:
+    easy:
+      name: 'Easy'
+    medium:
+      name: 'Medium'
+    hard:
+      name: 'Hard'
 # NOTE: Do not change
-config-version: 2.0
+config-version: 2.4

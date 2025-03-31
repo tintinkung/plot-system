@@ -1,0 +1,79 @@
+companion-item:
+  material: NETHER_STAR
+  modelId: ''
+
+leaderboard-plot:
+  material: NETHER_STAR
+  modelId: ''
+leaderboard-score:
+  material: NETHER_STAR
+  modelId: ''
+
+plot-unfinished:
+  material: ORANGE_WOOL
+  modelId: ''
+plot-unreviewed:
+  material: FILLED_MAP
+  modelId: ''
+plot-completed:
+  material: GREEN_WOOL
+  modelId: ''
+
+menu-error:
+  material: BARRIER
+  modelId: ''
+menu-close:
+  material: BARRIER
+  modelId: ''
+
+review-item:
+  material: BOOK
+  modelId: ''
+review-accuracy:
+  material: ARROW
+  modelId: ''
+review-block-palette:
+  material: PAINTING
+  modelId: ''
+review-detailing:
+  material: ENDER_EYE
+  modelId: ''
+review-technique:
+  material: WOODEN_AXE
+  modelId: ''
+review-point-zero:
+  material: LIGHT_GRAY_WOOL
+  modelId: ''
+review-point-one:
+  material: RED_WOOL
+  modelId: ''
+review-point-two:
+  material: ORANGE_WOOL
+  modelId: ''
+review-point-three:
+  material: YELLOW_WOOL
+  modelId: ''
+review-point-four:
+  material: GREEN_WOOL
+  modelId: ''
+review-point-five:
+  material: LIME_WOOL
+  modelId: ''
+review-submit:
+  material: GREEN_CONCRETE
+  modelId: ''
+review-cancel:
+  material: RED_CONCRETE
+  modelId: ''
+review-info-plot:
+  material: MAP
+  modelId: ''
+
+settings-item:
+  material: COMPARATOR
+  modelId: ''
+random-plot-item:
+  material: COMPARATOR
+  modelId: ''
+# NOTE: Do not change
+config-version: 1.2

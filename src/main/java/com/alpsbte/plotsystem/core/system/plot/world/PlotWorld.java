@@ -25,15 +25,15 @@
 package com.alpsbte.plotsystem.core.system.plot.world;
 
 import com.alpsbte.plotsystem.PlotSystem;
+import com.alpsbte.plotsystem.core.database.DataProvider;
 import com.alpsbte.plotsystem.core.system.plot.AbstractPlot;
-import com.alpsbte.plotsystem.core.system.plot.Plot;
 import com.alpsbte.plotsystem.core.system.plot.TutorialPlot;
 import com.alpsbte.plotsystem.core.system.plot.generator.AbstractPlotGenerator;
 import com.alpsbte.plotsystem.utils.Utils;
-import com.fastasyncworldedit.core.FaweAPI;
 import com.onarandombox.MultiverseCore.MultiverseCore;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -47,11 +47,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Locale;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class PlotWorld implements IWorld {
     public static final int PLOT_SIZE = 150;
@@ -87,29 +88,29 @@ public class PlotWorld implements IWorld {
                     if (multiverseInventoriesConfig.exists()) FileUtils.deleteDirectory(multiverseInventoriesConfig);
                     if (worldGuardConfig.exists()) FileUtils.deleteDirectory(worldGuardConfig);
                 } catch (IOException ex) {
-                    Bukkit.getLogger().log(Level.WARNING, "Could not delete config files for world " + getWorldName() + "!");
+                    PlotSystem.getPlugin().getComponentLogger().warn(text("Could not delete config files for world " + getWorldName() + "!"));
                     return false;
                 }
                 return true;
-            } else Bukkit.getLogger().log(Level.WARNING, "Could not delete world " + getWorldName() + "!");
+            } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not delete world " + getWorldName() + "!"));
         }
         return false;
     }
 
     @Override
     public boolean loadWorld() {
-        if(isWorldGenerated()) {
+        if (isWorldGenerated()) {
             if (isWorldLoaded()) {
                 return true;
             } else return mvCore.getMVWorldManager().loadWorld(getWorldName()) || isWorldLoaded();
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not load world " + worldName + " because it is not generated!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not load world " + worldName + " because it is not generated!"));
         return false;
     }
 
     @Override
     public boolean unloadWorld(boolean movePlayers) {
         if (isWorldGenerated()) {
-            if(isWorldLoaded()) {
+            if (isWorldLoaded()) {
                 if (movePlayers && !getBukkitWorld().getPlayers().isEmpty()) {
                     for (Player player : getBukkitWorld().getPlayers()) {
                         player.teleport(Utils.getSpawnLocation());
@@ -120,7 +121,7 @@ public class PlotWorld implements IWorld {
                 return !isWorldLoaded();
             }
             return true;
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not unload world " + worldName + " because it is not generated!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not unload world " + worldName + " because it is not generated!"));
         return false;
     }
 
@@ -129,7 +130,7 @@ public class PlotWorld implements IWorld {
         if (loadWorld() && plot != null) {
             player.teleport(getSpawnPoint(plot instanceof TutorialPlot ? null : plot.getCenter()));
             return true;
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not teleport player " + player.getName() + " to world " + worldName + "!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not teleport player " + player.getName() + " to world " + worldName + "!"));
         return false;
     }
 
@@ -158,7 +159,11 @@ public class PlotWorld implements IWorld {
     @Override
     public int getPlotHeightCentered() throws IOException {
         if (plot != null) {
-            Clipboard clipboard = FaweAPI.load(plot.getOutlinesSchematic());
+            Clipboard clipboard;
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(plot.getInitialSchematicBytes());
+            try (ClipboardReader reader = AbstractPlot.CLIPBOARD_FORMAT.getReader(inputStream)) {
+                clipboard = reader.read();
+            }
             if (clipboard != null) {
                 return (int) clipboard.getRegion().getCenter().y() - clipboard.getMinimumPoint().y();
             }
@@ -178,7 +183,7 @@ public class PlotWorld implements IWorld {
 
     @Override
     public String getRegionName() {
-       return worldName.toLowerCase(Locale.ROOT);
+        return worldName.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -207,7 +212,7 @@ public class PlotWorld implements IWorld {
             RegionManager regionManager = container.get(BukkitAdapter.adapt(getBukkitWorld()));
             if (regionManager != null) {
                 return regionManager.getRegion(regionName);
-            } else Bukkit.getLogger().log(Level.WARNING, "Region manager is null");
+            } else PlotSystem.getPlugin().getComponentLogger().warn(text("Region manager is null!"));
         }
         return null;
     }
@@ -236,15 +241,17 @@ public class PlotWorld implements IWorld {
     /**
      * Returns OnePlotWorld or PlotWorld (CityPlotWorld) class depending on the world name.
      * It won't return the CityPlotWorld class because there is no use case without a plot.
+     *
      * @param worldName - name of the world
+     * @param <T>       - OnePlotWorld or PlotWorld
      * @return - plot world
-     * @param <T> - OnePlotWorld or PlotWorld
      */
-    @SuppressWarnings("unchecked")
-    public static <T extends PlotWorld> T getPlotWorldByName(String worldName) throws SQLException {
-        if (isOnePlotWorld(worldName)) {
+    public static <T extends PlotWorld> T getPlotWorldByName(String worldName) {
+        if (isOnePlotWorld(worldName) || isCityPlotWorld(worldName)) {
             int id = Integer.parseInt(worldName.substring(2));
-            return worldName.toLowerCase(Locale.ROOT).startsWith("p-") ? new Plot(id).getWorld() : new TutorialPlot(id).getWorld();
-        } else return (T) new PlotWorld(worldName, null);
+            AbstractPlot plot = worldName.toLowerCase().startsWith("t-") ? DataProvider.TUTORIAL_PLOT.getById(id).orElse(null) : DataProvider.PLOT.getPlotById(id);
+            return plot == null ? null : plot.getWorld();
+        }
+        return null;
     }
 }

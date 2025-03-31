@@ -26,7 +26,6 @@ plot:
   status: "Statut"
   score: "Score"
   total-score: "Score Total"
-  effective-score: "Score Effectif"
   completed-plots: "Plots complétés"
   group-system:
     empty-member-slot: "Slot de Membre Vide"
@@ -99,7 +98,6 @@ menu-title:
   leave-plot: 'Quitter Plot'
   review-plots: 'Évaluation de la Parcelle'
   review-plot: 'Évaluation de la Parcelle #{0}'
-  enter-player-name: 'Entrer nom du joueur'
   select-language: 'Choix de la langue'
   select-plot-type: 'Choisissez un type de Parcelle'
   select-focus-mode: 'Sélectionner le mode Focus'
@@ -111,6 +109,7 @@ menu-title:
   tutorial-stages: 'Étapes du Tutoriel'
   tutorial-end: 'Tutoriel de fin'
   tutorial-beginner: 'Débuter'
+  companion-random: 'Sélection aléatoire'
 #-----------------------------------------------------
 #| Menu Descriptions
 #-----------------------------------------------------
@@ -125,7 +124,7 @@ menu-description:
   teleport-desc: 'Cliquez pour vous téléporter sur l''intrigue'
   abandon-desc: 'Cliquez pour réinitialiser votre plot et le donner à quelqu''un d''autre'
   undo-submit-desc: 'Cliquez pour annuler votre soumission'
-  manage-members-desc: 'Cliquez pour ouvrir le menu Plot Members, où vous pouvez ajouter%newline%supprimer d''autres joueurs sur votre plot'
+  manage-members-desc: 'Cliquez pour ouvrir le menu Plot Members, où vous pouvez ajouter supprimer d''autres joueurs sur votre plot'
   feedback-desc: 'Cliquez pour afficher les commentaires sur la review de votre plot'
   custom-heads-desc: 'Cliquez pour ouvrir le menu des têtes pour obtenir une variété de têtes personnalisées'
   banner-maker-desc: 'Cliquez pour créer et enregistrer vos propres bannières'
@@ -141,9 +140,10 @@ menu-description:
   select-city-inspiration-mode-desc: "Construisez sur une île flottante avec un environnement, et des constructions d'autres joueurs faites autour de votre parcelle.%newline%%newline%+ Environnment%newline%+ Parcelles adjacentes"
   filter-desc: "Tout montrer"
   information-desc: "Une parcelle peut recevoir un maximum de 20 points. Si la parcelle reçoit moins de 8 points, ou a une catégorie a 0 points, le plot est rejeté et le builder reconstruit la parcelle en l'améliorant. Si la parcelle reçoit 0 points, elle est abandonnée."
-  tutorials-desc: 'Apprenez les bases de Build The Earth%newline%project et améliorez vos capacités de construction%newline%avec des tutoriels sur plusieurs sujets.'
+  tutorials-desc: 'Apprenez les bases de Build The Earth project et améliorez vos capacités de construction avec des tutoriels sur plusieurs sujets.'
   tutorial-end-desc: 'Vos progrès seront sauvegardés.'
-  tutorial-beginner-desc: 'Apprenez les bases pour construire%newline%pour le projet Build The Earth.'
+  tutorial-beginner-desc: 'Apprenez les bases pour construire pour le projet Build The Earth.'
+  companion-random-desc: 'Cliquez sur pour sélectionner aléatoirement.'
 #-----------------------------------------------------
 #| Review
 #-----------------------------------------------------
@@ -197,6 +197,7 @@ note:
     click-to-show-plots: "§6Cliquez ici §apour afficher vos tracés..."
     click-to-play-with-friends: "§7Vous voulez jouer avec vos amis? §6Cliquez ici..."
     tutorial-show-stages: 'Montrer les étapes'
+    click-to-open-plots-menu: 'Cliquez pour ouvrir le menu des parcelles...'
 #-----------------------------------------------------
 #| Messages
 #-----------------------------------------------------
@@ -260,6 +261,7 @@ message:
     player-invite-to-rejected: '{0} a rejeté votre invitation.'
     player-needs-to-be-on-plot: "Vous devez être sur un terrain pour pouvoir l'utiliser!"
     player-needs-higher-score: "Vous avez besoin d'un score plus élevé pour intégrer ce niveau de difficulté."
+    player-missing-tutorial: "Le joueur doit d'abord terminer le tutoriel pour être intégré à l'intrigue!"
     error-occurred: "Une erreur s'est produite! Veuillez réessayer!"
     command-disabled: "Cette commande est désactivée!"
     no-plots-left: "Ce projet de ville n'a plus de parcelles restantes. Veuillez sélectionner un autre projet."
@@ -388,5 +390,27 @@ tutorials:
         - 'Bonne construction ! ☺'
       stage-10-tasks:
         - 'Lisez tous les conseils sur les parcelles et marquez-les comme lus.'
+# -----------------------------------------------------
+# | Database
+# -----------------------------------------------------
+database:
+  city-project:
+    example-city:
+      name: 'Example City'
+      description: 'Some description'
+  country:
+    AT:
+      name: 'Austria'
+    CH:
+      name: 'Switzerland'
+    LI:
+      name: 'Liechtenstein'
+  difficulty:
+    easy:
+      name: 'Easy'
+    medium:
+      name: 'Medium'
+    hard:
+      name: 'Hard'
 #NOTE: Do not change
-config-version: 2.1
+config-version: 2.4

@@ -28,7 +28,6 @@ import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.utils.io.ConfigPaths;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.sql.*;
@@ -37,7 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class DatabaseConnection {
 
@@ -74,18 +74,8 @@ public class DatabaseConnection {
         createTables();
     }
 
-    @Deprecated
-    public static Connection getConnection() {
-        int retries = 3;
-        while (retries > 0) {
-            try {
-                return dataSource.getConnection();
-            } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "Database connection failed!\n\n" + ex.getMessage());
-            }
-            retries--;
-        }
-        return null;
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 
     public static StatementBuilder createStatement(String sql) {
@@ -93,7 +83,7 @@ public class DatabaseConnection {
     }
 
     public static void closeResultSet(ResultSet resultSet) throws SQLException {
-        if(resultSet.isClosed()
+        if (resultSet.isClosed()
                 && resultSet.getStatement().isClosed()
                 && resultSet.getStatement().getConnection().isClosed())
             return;
@@ -104,9 +94,9 @@ public class DatabaseConnection {
 
         connectionClosed++;
 
-        if(connectionOpened > connectionClosed + 5) {
-            Bukkit.getLogger().log(Level.SEVERE, "There are multiple database connections opened. Please report this issue.");
-            Bukkit.getLogger().log(Level.SEVERE, "Connections Open: " + (connectionOpened - connectionClosed));
+        if (connectionOpened > connectionClosed + 5) {
+            PlotSystem.getPlugin().getComponentLogger().error(text("There are multiple database connections opened. Please report this issue."));
+            PlotSystem.getPlugin().getComponentLogger().error(text("Connections Open: " + (connectionOpened - connectionClosed)));
         }
     }
 
@@ -134,18 +124,19 @@ public class DatabaseConnection {
                 }
             }
         } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "An error occurred while creating database table!", ex);
+            PlotSystem.getPlugin().getComponentLogger().error(text("An error occurred while creating á database table"), ex);
         }
     }
 
     /**
      * Returns a missing auto increment id
+     *
      * @param table in the database
      * @return smallest missing auto increment id in the table
      */
     public static int getTableID(String table) {
         try {
-            String query ="SELECT id + 1 available_id FROM $table t WHERE NOT EXISTS (SELECT * FROM $table WHERE $table.id = t.id + 1) ORDER BY id LIMIT 1"
+            String query = "SELECT id + 1 available_id FROM $table t WHERE NOT EXISTS (SELECT * FROM $table WHERE $table.id = t.id + 1) ORDER BY id LIMIT 1"
                     .replace("$table", table);
             try (ResultSet rs = DatabaseConnection.createStatement(query).executeQuery()) {
                 if (rs.next()) {
@@ -158,7 +149,7 @@ public class DatabaseConnection {
                 return 1;
             }
         } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
+            PlotSystem.getPlugin().getComponentLogger().error(text("A SQL error occurred!"), ex);
             return 1;
         }
     }
@@ -376,7 +367,7 @@ public class DatabaseConnection {
                             "INDEX `FK_138` (`builder_uuid`) USING BTREE," +
                             "INDEX `FK_141` (`buildteam_id`) USING BTREE," +
                             "CONSTRAINT `FK_136` FOREIGN KEY (`builder_uuid`) REFERENCES `plotsystem_builders` (`uuid`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
-                            "CONSTRAINT `FK_139` FOREIGN KEY (`buildteam_id`) REFERENCES `plotsystem_buildteams` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" + 
+                            "CONSTRAINT `FK_139` FOREIGN KEY (`buildteam_id`) REFERENCES `plotsystem_buildteams` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
                             ")" +
                             "COLLATE='utf8mb4_general_ci'" +
                             "ENGINE=InnoDB" +

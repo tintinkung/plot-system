@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -38,15 +38,15 @@ public class LangUtil extends LanguageUtil {
 
     public static void init() {
         if (langUtilInstance != null) return;
-        LangLibAPI.register(PlotSystem.getPlugin(),new LanguageFile[]{
-                new LanguageFile(Language.en_GB, 2.0),
-                new LanguageFile(Language.de_DE, 2.0, "de_AT", "de_CH"),
-                new LanguageFile(Language.fr_FR, 2.1, "fr_CA"),
-                new LanguageFile(Language.pt_PT, 2.0, "pt_BR"),
-                new LanguageFile(Language.ko_KR, 2.0),
-                new LanguageFile(Language.ru_RU, 2.0, "ba_RU", "tt_RU"),
-                new LanguageFile(Language.zh_CN, 2.0),
-                new LanguageFile(Language.zh_TW, 2.1, "zh_HK"),
+        LangLibAPI.register(PlotSystem.getPlugin(), new LanguageFile[]{
+                new LanguageFile(Language.en_GB, 2.4),
+                new LanguageFile(Language.de_DE, 2.4, "de_AT", "de_CH"),
+                new LanguageFile(Language.fr_FR, 2.4, "fr_CA"),
+                new LanguageFile(Language.pt_PT, 2.4, "pt_BR"),
+                new LanguageFile(Language.ko_KR, 2.4),
+                new LanguageFile(Language.ru_RU, 2.4, "ba_RU", "tt_RU"),
+                new LanguageFile(Language.zh_CN, 2.4),
+                new LanguageFile(Language.zh_TW, 2.4, "zh_HK"),
         });
         langUtilInstance = new LangUtil();
     }

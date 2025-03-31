@@ -25,22 +25,20 @@
 package com.alpsbte.plotsystem.core.system;
 
 import com.alpsbte.plotsystem.PlotSystem;
+import com.alpsbte.plotsystem.core.database.DataProvider;
 import com.alpsbte.plotsystem.core.database.DatabaseConnection;
 import com.alpsbte.plotsystem.core.system.plot.Plot;
 import com.alpsbte.plotsystem.utils.enums.Category;
 import com.alpsbte.plotsystem.utils.enums.Status;
-import com.alpsbte.plotsystem.utils.io.FTPManager;
 import org.bukkit.Bukkit;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.UUID;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class Review {
     private final int reviewID;
@@ -108,20 +106,13 @@ public class Review {
                 String[] scoreAsString = rs.getString("rating").split(",");
                 DatabaseConnection.closeResultSet(rs);
 
-                switch (category) {
-                    case ACCURACY:
-                        return Integer.parseInt(scoreAsString[0]);
-                    case BLOCKPALETTE:
-                        return Integer.parseInt(scoreAsString[1]);
-                    case DETAILING:
-                        return Integer.parseInt(scoreAsString[2]);
-                    case TECHNIQUE:
-                        return Integer.parseInt(scoreAsString[3]);
-                    case ALL:
-                        return Integer.parseInt(scoreAsString[0]) + Integer.parseInt(scoreAsString[1]) + Integer.parseInt(scoreAsString[2]) + Integer.parseInt(scoreAsString[3]);
-                    default:
-                        return 0;
-                }
+                return switch (category) {
+                    case ACCURACY -> Integer.parseInt(scoreAsString[0]);
+                    case BLOCKPALETTE -> Integer.parseInt(scoreAsString[1]);
+                    case DETAILING -> Integer.parseInt(scoreAsString[2]);
+                    case TECHNIQUE -> Integer.parseInt(scoreAsString[3]);
+                    case ALL -> Integer.parseInt(scoreAsString[0]) + Integer.parseInt(scoreAsString[1]) + Integer.parseInt(scoreAsString[2]) + Integer.parseInt(scoreAsString[3]);
+                };
             }
 
             DatabaseConnection.closeResultSet(rs);
@@ -170,24 +161,8 @@ public class Review {
     }
 
     public void setFeedback(String feedback) throws SQLException {
-        String[] feedbackArr = feedback.split(" ");
-        StringBuilder finalFeedback = new StringBuilder();
-        int lineLength = 0;
-        int lines = 0;
-
-        for (String word : feedbackArr) {
-            if((lineLength + word.length()) <= 60) {
-                finalFeedback.append((lines == 0 && lineLength == 0) ? "" : " ").append(word);
-                lineLength += word.length();
-            } else {
-                finalFeedback.append("//").append(word);
-                lineLength = 0;
-                lines++;
-            }
-        }
-
         DatabaseConnection.createStatement("UPDATE plotsystem_reviews SET feedback = ? WHERE id = ?")
-                .setValue(finalFeedback.toString()).setValue(this.reviewID).executeUpdate();
+                .setValue(feedback).setValue(this.reviewID).executeUpdate();
     }
 
     public void setFeedbackSent(boolean isSent) throws SQLException {
@@ -218,54 +193,35 @@ public class Review {
     public static void undoReview(Review review) {
         Bukkit.getScheduler().runTaskAsynchronously(PlotSystem.getPlugin(), () -> {
             try {
-                Plot plot = new Plot(review.getPlotID());
+                Plot plot = DataProvider.PLOT.getPlotById(review.getPlotID());
 
                 for (Builder member : plot.getPlotMembers()) {
                     member.addScore(-plot.getSharedScore());
-                    member.addCompletedBuild(-1);
 
                     if (member.getFreeSlot() != null) {
-                        member.setPlot(plot.getID(), member.getFreeSlot());
+                        member.setSlot(member.getFreeSlot(), plot.getID());
                     }
                 }
 
                 plot.getPlotOwner().addScore(-plot.getSharedScore());
-                plot.getPlotOwner().addCompletedBuild(-1);
                 plot.setTotalScore(-1);
                 plot.setStatus(Status.unreviewed);
                 plot.setPasted(false);
 
                 if (plot.getPlotOwner().getFreeSlot() != null) {
-                    plot.getPlotOwner().setPlot(plot.getID(), plot.getPlotOwner().getFreeSlot());
+                    plot.getPlotOwner().setSlot(plot.getPlotOwner().getFreeSlot(), plot.getID());
                 }
 
-                int cityId = plot.getCity().getID();
-                Server plotServer = plot.getCity().getCountry().getServer();
-                boolean hasFTPConfiguration = plotServer.getFTPConfiguration() != null;
-                Bukkit.getScheduler().runTask(PlotSystem.getPlugin(), () -> {
-                    plot.getWorld().loadWorld();
+                DataProvider.PLOT.setCompletedSchematic(plot.getID(), null);
 
-                    try {
-                        Files.deleteIfExists(plot.getCompletedSchematic().toPath());
-
-                        if (hasFTPConfiguration) {
-                            FTPManager.deleteSchematic(FTPManager.getFTPUrl(plotServer, cityId), plot.getID() + ".schem");
-                            FTPManager.deleteSchematic(FTPManager.getFTPUrl(plotServer, cityId), plot.getID() + ".schematic");
-                        }
-                    } catch (IOException | SQLException | URISyntaxException ex) {
-                        Bukkit.getLogger().log(Level.SEVERE, "An error occurred while undoing review!", ex);
-                    }
-
-                    plot.getWorld().unloadWorld(true);
-                });
-
+                // TODO: extract sql to data provider
                 DatabaseConnection.createStatement("UPDATE plotsystem_plots SET review_id = DEFAULT(review_id) WHERE id = ?")
                         .setValue(review.getPlotID()).executeUpdate();
 
                 DatabaseConnection.createStatement("DELETE FROM plotsystem_reviews WHERE id = ?")
                         .setValue(review.reviewID).executeUpdate();
             } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "An error occurred while undoing review!", ex);
+                PlotSystem.getPlugin().getComponentLogger().error(text("An error occurred while undoing review!"), ex);
             }
         });
     }
