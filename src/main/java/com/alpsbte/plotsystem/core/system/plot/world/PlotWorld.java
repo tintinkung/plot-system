@@ -57,6 +57,15 @@ import static net.kyori.adventure.text.Component.text;
 public class PlotWorld implements IWorld {
     public static final int PLOT_SIZE = 150;
     public static final int MAX_WORLD_HEIGHT = 256;
+
+    /**
+     * <p>Minimum Y level a plot can be paste to including ground layer</p>
+     *
+     * Note that the ground layer is defined by plotsystem-terra when we first created the plot
+     * <a href="https://github.com/AlpsBTE/Plot-System-Terra/blob/a9fbc433c8677983af99eb42ab31ab00cda3b585/src/main/java/com/alpsbte/plotsystemterra/core/plotsystem/PlotCreator.java#L53">
+     *     PlotCreator.MIN_OFFSET_Y = 5
+     * </a>
+     */
     public static final int MIN_WORLD_HEIGHT = 5;
 
     private final MultiverseCore mvCore = PlotSystem.DependencyManager.getMultiverseCore();

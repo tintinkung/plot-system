@@ -313,6 +313,11 @@ public abstract class AbstractPlotGenerator {
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(world.getBukkitWorld()))) {
                 if (pasteMask != null) editSession.setMask(pasteMask);
                 Clipboard clipboard = FaweAPI.load(schematicFile);
+
+                PlotSystem.getPlugin().getComponentLogger().info(text("Pasting plot file: " + schematicFile.getPath()));
+                PlotSystem.getPlugin().getComponentLogger().info(text("at: " + clipboard.getRegion().getMinimumPoint()));
+                PlotSystem.getPlugin().getComponentLogger().info(text("world height: " + world.getPlotHeight()));
+
                 Operation clipboardHolder = new ClipboardHolder(clipboard)
                         .createPaste(editSession)
                         .to(BlockVector3.at(world.getPlot().getCenter().x(), world.getPlotHeight(), world.getPlot().getCenter().z()))

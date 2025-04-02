@@ -204,7 +204,10 @@ public final class PlotUtils {
         if (clipboard != null) {
             CuboidRegion cuboidRegion = getPlotAsRegion(plot);
 
+
             if (cuboidRegion != null) {
+                PlotSystem.getPlugin().getComponentLogger().info(text("Saving region: " + cuboidRegion.getMinimumPoint()));
+
                 // Get plot outline
                 List<BlockVector2> plotOutlines = plot.getOutline();
 
@@ -264,15 +267,45 @@ public final class PlotUtils {
                         (double) terraCenter.z() - (double) clipboard.getMinimumPoint().z() + cuboidRegion.getMinimumPoint().z()
                 ));
             }
+
+            ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(
+                Objects.requireNonNull(region.getWorld()), // source
+                region, // region: our local plot region
+                cb, // destination: the original region
+                region.getMinimumPoint()); // to
+            Operations.complete(forwardExtentCopy);
+
+            try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(new FileOutputStream(finishedSchematicFile, false))) {
+                writer.write(cb);
+            }
         }
 
-        ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(Objects.requireNonNull(region.getWorld()), region, clipboard, region.getMinimumPoint());
-        Operations.complete(forwardExtentCopy);
-
-        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(new FileOutputStream(finishedSchematicFile, false))) {
-            writer.write(clipboard);
-        }
         return finishedSchematicFile;
+
+        // EditSession editSession = PlotSystem.DependencyManager.getWorldEdit().getEditSessionFactory().getEditSession(region.getWorld(), -1);
+//        BlockVector3 yPosition = BlockVector3.at(0, clipboard.getMinimumPoint().y() - region.getMinimumPoint().y(), 0);
+//
+//        // -2 + -64
+//        // -2 + 64
+//        // +62
+//        // region.shift(yPosition);
+//        PlotSystem.getPlugin().getComponentLogger().info(text("Shifting region by: " + yPosition));
+//        PlotSystem.getPlugin().getComponentLogger().info(text("Edited region position: " + region.getMinimumPoint()));
+//
+//        ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(
+//                Objects.requireNonNull(region.getWorld()), // source
+//                region, // region: our local plot region
+//                region.getMinimumPoint(),
+//                clipboard, // destination: the original region
+//                clipboard.getMinimumPoint() // to
+//        );
+//        Operations.complete(forwardExtentCopy);
+//        PlotSystem.getPlugin().getComponentLogger().info(text("Writing schem file at: " + clipboard.getMinimumPoint()));
+//
+//        try (ClipboardWriter writer = BuiltInClipboardFormat.FAST_V2.getWriter(new FileOutputStream(finishedSchematicFile, false))) {
+//            writer.write(clipboard);
+//        }
+//        return finishedSchematicFile;
     }
 
     public static @Nullable CompletableFuture<double[]> convertTerraToPlotXZ(@NotNull AbstractPlot plot, double[] terraCoords) throws IOException, SQLException {
