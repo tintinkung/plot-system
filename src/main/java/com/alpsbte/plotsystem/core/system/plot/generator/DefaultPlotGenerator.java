@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 
 package com.alpsbte.plotsystem.core.system.plot.generator;
 
+import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.core.system.Builder;
 import com.alpsbte.plotsystem.core.system.plot.AbstractPlot;
 import com.alpsbte.plotsystem.core.system.plot.Plot;
@@ -36,7 +37,6 @@ import com.alpsbte.plotsystem.utils.enums.Status;
 import com.alpsbte.plotsystem.utils.io.LangPaths;
 import com.alpsbte.plotsystem.utils.io.LangUtil;
 import com.sk89q.worldedit.WorldEditException;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,15 +46,15 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class DefaultPlotGenerator extends AbstractPlotGenerator {
-    public final static Map<UUID, LocalDateTime> playerPlotGenerationHistory = new HashMap<>();
+    public static final Map<UUID, LocalDateTime> playerPlotGenerationHistory = new HashMap<>();
 
     public DefaultPlotGenerator(int cityID, PlotDifficulty plotDifficulty, Builder builder) throws SQLException {
-        this(Plot.getPlots(cityID, plotDifficulty, Status.unclaimed).get(new Random().nextInt(Plot.getPlots(cityID, plotDifficulty, Status.unclaimed).size())), builder);
+        this(Plot.getPlots(cityID, plotDifficulty, Status.unclaimed).get(Utils.getRandom().nextInt(Plot.getPlots(cityID, plotDifficulty, Status.unclaimed).size())), builder);
     }
 
     public DefaultPlotGenerator(@NotNull AbstractPlot plot, @NotNull Builder builder) throws SQLException {
@@ -87,9 +87,7 @@ public class DefaultPlotGenerator extends AbstractPlotGenerator {
                 getBuilder().getPlayer().sendMessage(Utils.ChatUtils.getAlertFormat(LangUtil.getInstance().get(getBuilder().getPlayer(), LangPaths.Message.Error.ALL_SLOTS_OCCUPIED)));
                 getBuilder().getPlayer().playSound(getBuilder().getPlayer().getLocation(), Utils.SoundUtils.ERROR_SOUND, 1, 1);
             }
-        } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.INFO, "A SQL error occurred!", ex);
-        }
+        } catch (SQLException ex) {Utils.logSqlException(ex);}
         return false;
     }
 
@@ -116,7 +114,7 @@ public class DefaultPlotGenerator extends AbstractPlotGenerator {
 
                 @Override
                 protected void onException(Throwable ex) {
-                    Bukkit.getLogger().log(Level.WARNING, "Could not generate plot in city world " + world.getWorldName() + "!", ex);
+                    PlotSystem.getPlugin().getComponentLogger().warn(text("Could not generate plot in city world " + world.getWorldName() + "!"), ex);
                 }
             };
         }

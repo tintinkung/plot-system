@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import com.alpsbte.plotsystem.core.system.plot.TutorialPlot;
 import com.alpsbte.plotsystem.core.system.tutorial.AbstractTutorial;
 import com.alpsbte.plotsystem.core.system.tutorial.Tutorial;
 import com.alpsbte.plotsystem.core.system.tutorial.TutorialCategory;
-import com.alpsbte.plotsystem.core.system.tutorial.TutorialUtils;
+import com.alpsbte.plotsystem.core.system.tutorial.utils.TutorialUtils;
 import com.alpsbte.plotsystem.utils.Utils;
 import com.alpsbte.plotsystem.utils.io.ConfigUtil;
 import com.alpsbte.plotsystem.utils.io.LangPaths;
@@ -39,7 +39,6 @@ import com.alpsbte.plotsystem.utils.io.LangUtil;
 import com.alpsbte.plotsystem.utils.items.MenuItems;
 import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -48,14 +47,13 @@ import org.ipvp.canvas.mask.BinaryMask;
 import org.ipvp.canvas.mask.Mask;
 
 import java.sql.SQLException;
-import java.util.logging.Level;
 
 import static net.md_5.bungee.api.ChatColor.*;
 
 public class TutorialStagesMenu extends AbstractMenu {
-    private static final int totalStagesRows = 2;
-    private static final int totalStagesSlots = totalStagesRows * (9 - 2);
-    private static final int stagesPerRow = totalStagesSlots / totalStagesRows;
+    private static final int TOTAL_STAGES_ROWS = 2;
+    private static final int TOTAL_STAGES_SLOTS = TOTAL_STAGES_ROWS * (9 - 2);
+    private static final int STAGES_PER_ROW = TOTAL_STAGES_SLOTS / TOTAL_STAGES_ROWS;
 
     private final int tutorialId;
     private final String tutorialItemName;
@@ -78,16 +76,16 @@ public class TutorialStagesMenu extends AbstractMenu {
         int totalStages = ConfigUtil.getTutorialInstance().configs[tutorialId].getInt(TutorialUtils.Path.TUTORIAL_STAGES);
 
         // Calculate the number of stages to place in the first row
-        stagesInFirstRow = Math.min(stagesPerRow, totalStages);
+        stagesInFirstRow = Math.min(STAGES_PER_ROW, totalStages);
 
         // Calculate the number of stages to place in the second row
-        stagesInSecondRow = Math.min(stagesPerRow, totalStages - stagesInFirstRow);
+        stagesInSecondRow = Math.min(STAGES_PER_ROW, totalStages - stagesInFirstRow);
 
         // Calculate the starting slot for the first row
-        startSlotFirstRow = 9 * 2 + ((stagesPerRow - stagesInFirstRow) / 2) + 1; // 9 = slots, 2 = rows
+        startSlotFirstRow = 9 * 2 + ((STAGES_PER_ROW - stagesInFirstRow) / 2) + 1; // 9 = slots, 2 = rows
 
         // Calculate the starting slot for the second row
-        startSlotSecondRow = 9 * 3 + ((stagesPerRow - stagesInSecondRow) / 2) + 1;
+        startSlotSecondRow = 9 * 3 + ((STAGES_PER_ROW - stagesInSecondRow) / 2) + 1;
 
         // Get tutorial item name
         tutorialItemName = ConfigUtil.getTutorialInstance().configs[tutorialId].getString(TutorialUtils.Path.TUTORIAL_ITEM_NAME);
@@ -133,9 +131,7 @@ public class TutorialStagesMenu extends AbstractMenu {
                 playerHighestStage = plot.getStageID();
                 isTutorialCompleted = plot.isCompleted();
             }
-        } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.INFO, "A SQL error occurred!", ex);
-        }
+        } catch (SQLException ex) {Utils.logSqlException(ex);}
 
         // Set tutorial stats item
         ItemBuilder tutorialItem = new ItemBuilder(Material.valueOf(tutorialItemName));
@@ -143,9 +139,9 @@ public class TutorialStagesMenu extends AbstractMenu {
         if (plot != null) {
             tutorialItem.setLore(
                     new LegacyLoreBuilder().addLines("",
-                            LangUtil.getInstance().get(getMenuPlayer(), LangPaths.Tutorials.STAGE) + ": " + WHITE +
-                            (playerHighestStage + (isTutorialCompleted ? 1 : 0)) + "/" + ConfigUtil.getTutorialInstance().configs[tutorialId].getInt(TutorialUtils.Path.TUTORIAL_STAGES))
-                    .build());
+                                    LangUtil.getInstance().get(getMenuPlayer(), LangPaths.Tutorials.STAGE) + ": " + WHITE +
+                                            (playerHighestStage + (isTutorialCompleted ? 1 : 0)) + "/" + ConfigUtil.getTutorialInstance().configs[tutorialId].getInt(TutorialUtils.Path.TUTORIAL_STAGES))
+                            .build());
         }
         getMenu().getSlot(4).setItem(tutorialItem.build());
 
@@ -186,17 +182,18 @@ public class TutorialStagesMenu extends AbstractMenu {
         return BinaryMask.builder(getMenu())
                 .item(new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).setName(Component.empty()).build())
                 .pattern("111101111")
-                .pattern("000000000")
-                .pattern("000000000")
-                .pattern("000000000")
-                .pattern("000000000")
+                .pattern(Utils.EMPTY_MASK)
+                .pattern(Utils.EMPTY_MASK)
+                .pattern(Utils.EMPTY_MASK)
+                .pattern(Utils.EMPTY_MASK)
                 .pattern("111101111")
                 .build();
     }
 
     /**
      * Sets the click event for a stage item and loads the tutorial stage
-     * @param slot The slot of the stage item
+     *
+     * @param slot    The slot of the stage item
      * @param stageId The id of the stage
      */
     private void setStageClickEvent(int slot, int stageId) {
@@ -205,7 +202,7 @@ public class TutorialStagesMenu extends AbstractMenu {
                 getMenuPlayer().closeInventory();
 
                 // Load the tutorial stage by id
-                if (!AbstractTutorial.loadTutorial(getMenuPlayer(), tutorialId, stageId)) {
+                if (!AbstractTutorial.loadTutorialByStage(getMenuPlayer(), tutorialId, stageId)) {
                     Tutorial tutorial = AbstractTutorial.getActiveTutorial(player.getUniqueId());
                     if (tutorial != null) {
                         if (tutorial.getId() == tutorialId) tutorial.setStage(stageId);
@@ -224,8 +221,9 @@ public class TutorialStagesMenu extends AbstractMenu {
 
     /**
      * Gets the menu stage item by the given tutorial id and stage id
+     *
      * @param tutorialId The tutorial id
-     * @param stageId The stage id
+     * @param stageId    The stage id
      * @return The menu stage item
      */
     private ItemStack getStageItem(int tutorialId, int stageId) {
@@ -249,14 +247,15 @@ public class TutorialStagesMenu extends AbstractMenu {
 
     /**
      * Gets the stage title by reading the language file manually.
-     * @param player The player
+     *
+     * @param player     The player
      * @param tutorialId The tutorial id
-     * @param stageId The stage id
+     * @param stageId    The stage id
      * @return The stage title
      */
     private static String getStageTitle(Player player, int tutorialId, int stageId) {
         String stageString = "stage-" + stageId;
-        return LangUtil.getInstance().get(player, LangPaths.Tutorials.TUTORIALS +
+        return LangUtil.getInstance().get(player, LangPaths.Tutorials.TUTORIALS_PREFIX +
                 TutorialCategory.values()[tutorialId].name().toLowerCase() + "." +
                 stageString + "." + stageString + "-title");
     }

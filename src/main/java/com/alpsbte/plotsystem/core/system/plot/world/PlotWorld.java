@@ -53,7 +53,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class PlotWorld implements IWorld {
     public static final int PLOT_SIZE = 150;
@@ -89,29 +90,29 @@ public class PlotWorld implements IWorld {
                     if (multiverseInventoriesConfig.exists()) FileUtils.deleteDirectory(multiverseInventoriesConfig);
                     if (worldGuardConfig.exists()) FileUtils.deleteDirectory(worldGuardConfig);
                 } catch (IOException ex) {
-                    Bukkit.getLogger().log(Level.WARNING, "Could not delete config files for world " + getWorldName() + "!");
+                    PlotSystem.getPlugin().getComponentLogger().warn(text("Could not delete config files for world " + getWorldName() + "!"));
                     return false;
                 }
                 return true;
-            } else Bukkit.getLogger().log(Level.WARNING, "Could not delete world " + getWorldName() + "!");
+            } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not delete world " + getWorldName() + "!"));
         }
         return false;
     }
 
     @Override
     public boolean loadWorld() {
-        if(isWorldGenerated()) {
+        if (isWorldGenerated()) {
             if (isWorldLoaded()) {
                 return true;
             } else return mvCore.getMVWorldManager().loadWorld(getWorldName()) || isWorldLoaded();
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not load world " + worldName + " because it is not generated!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not load world " + worldName + " because it is not generated!"));
         return false;
     }
 
     @Override
     public boolean unloadWorld(boolean movePlayers) {
         if (isWorldGenerated()) {
-            if(isWorldLoaded()) {
+            if (isWorldLoaded()) {
                 if (movePlayers && !getBukkitWorld().getPlayers().isEmpty()) {
                     for (Player player : getBukkitWorld().getPlayers()) {
                         player.teleport(Utils.getSpawnLocation());
@@ -122,7 +123,7 @@ public class PlotWorld implements IWorld {
                 return !isWorldLoaded();
             }
             return true;
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not unload world " + worldName + " because it is not generated!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not unload world " + worldName + " because it is not generated!"));
         return false;
     }
 
@@ -131,7 +132,7 @@ public class PlotWorld implements IWorld {
         if (loadWorld() && plot != null) {
             player.teleport(getSpawnPoint(plot instanceof TutorialPlot ? null : BlockVector3.at(0, plot.getCenter().getY(), 0)));
             return true;
-        } else Bukkit.getLogger().log(Level.WARNING, "Could not teleport player " + player.getName() + " to world " + worldName + "!");
+        } else PlotSystem.getPlugin().getComponentLogger().warn(text("Could not teleport player " + player.getName() + " to world " + worldName + "!"));
         return false;
     }
 
@@ -142,7 +143,7 @@ public class PlotWorld implements IWorld {
             if (plotVector == null) {
                 spawnLocation = getBukkitWorld().getSpawnLocation();
             } else {
-                spawnLocation = new Location(getBukkitWorld(), plotVector.getX(), plotVector.getY(), plotVector.getZ());
+                spawnLocation = new Location(getBukkitWorld(), plotVector.x(), plotVector.y(), plotVector.z());
             }
 
             // Set spawn point 1 block above the highest block at the spawn location
@@ -162,7 +163,7 @@ public class PlotWorld implements IWorld {
         if (plot != null) {
             Clipboard clipboard = FaweAPI.load(plot.getOutlinesSchematic());
             if (clipboard != null) {
-                return (int) clipboard.getRegion().getCenter().getY() - clipboard.getMinimumPoint().getBlockY();
+                return (int) clipboard.getRegion().getCenter().y() - clipboard.getMinimumPoint().y();
             }
         }
         return 0;
@@ -180,7 +181,7 @@ public class PlotWorld implements IWorld {
 
     @Override
     public String getRegionName() {
-       return worldName.toLowerCase(Locale.ROOT);
+        return worldName.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -209,7 +210,7 @@ public class PlotWorld implements IWorld {
             RegionManager regionManager = container.get(BukkitAdapter.adapt(getBukkitWorld()));
             if (regionManager != null) {
                 return regionManager.getRegion(regionName);
-            } else Bukkit.getLogger().log(Level.WARNING, "Region manager is null");
+            } else PlotSystem.getPlugin().getComponentLogger().warn(text("Region manager is null!"));
         }
         return null;
     }
@@ -238,15 +239,20 @@ public class PlotWorld implements IWorld {
     /**
      * Returns OnePlotWorld or PlotWorld (CityPlotWorld) class depending on the world name.
      * It won't return the CityPlotWorld class because there is no use case without a plot.
+     *
      * @param worldName - name of the world
+     * @param <T>       - OnePlotWorld or PlotWorld
      * @return - plot world
-     * @param <T> - OnePlotWorld or PlotWorld
      */
-    @SuppressWarnings("unchecked")
-    public static <T extends PlotWorld> T getPlotWorldByName(String worldName) throws SQLException {
-        if (isOnePlotWorld(worldName)) {
+    public static <T extends PlotWorld> T getPlotWorldByName(String worldName) {
+        if (isOnePlotWorld(worldName) || isCityPlotWorld(worldName)) {
             int id = Integer.parseInt(worldName.substring(2));
-            return worldName.toLowerCase(Locale.ROOT).startsWith("p-") ? new Plot(id).getWorld() : new TutorialPlot(id).getWorld();
-        } else return (T) new PlotWorld(worldName, null);
+            try {
+                return worldName.toLowerCase().startsWith("t-") ? new TutorialPlot(id).getWorld() : new Plot(id).getWorld();
+            } catch (SQLException ex) {
+                PlotSystem.getPlugin().getComponentLogger().error(text("A SQL error occurred!"), ex);
+            }
+        }
+        return null;
     }
 }

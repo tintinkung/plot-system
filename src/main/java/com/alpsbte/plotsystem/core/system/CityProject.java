@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,8 @@
 package com.alpsbte.plotsystem.core.system;
 
 import com.alpsbte.alpslib.utils.item.ItemBuilder;
-import com.alpsbte.alpslib.utils.item.LegacyLoreBuilder;
+import com.alpsbte.alpslib.utils.item.LoreBuilder;
+import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.core.database.DatabaseConnection;
 import com.alpsbte.plotsystem.core.system.plot.Plot;
 import com.alpsbte.plotsystem.utils.Utils;
@@ -34,15 +35,19 @@ import com.alpsbte.plotsystem.utils.enums.Status;
 import com.alpsbte.plotsystem.utils.io.LangPaths;
 import com.alpsbte.plotsystem.utils.io.LangUtil;
 import com.alpsbte.plotsystem.utils.items.MenuItems;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
+
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.TextDecoration.BOLD;
 
 public class CityProject {
 
@@ -103,59 +108,62 @@ public class CityProject {
             int plotsOpenForPlayer = cpPlotDifficulty != null && plotsUnclaimed != 0 ? getOpenPlotsForPlayer(getID(), cpPlotDifficulty) : 0;
 
             return new ItemBuilder(cpItem)
-                    .setName("§b§l" + getName())
-                    .setLore(new LegacyLoreBuilder()
-                            .addLines(getDescription(),
-                                    "",
-                                    "§6" + plotsOpen + " §7" + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_OPEN) + " §8" + LangUtil.getInstance().get(player, LangPaths.CityProject.FOR_YOUR_DIFFICULTY, (plotsOpenForPlayer == 0 ? "§c" : "§a") + plotsOpenForPlayer + "§8"),
-                                    "§8---------------------",
-                                    "§6" + plotsInProgress + " §7" + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_IN_PROGRESS),
-                                    "§6" + plotsCompleted + " §7" + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_COMPLETED),
-                                    "",
-                                    plotsUnclaimed != 0 ? Utils.ItemUtils.getFormattedDifficulty(cpPlotDifficulty) : "§f§l" + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_NO_PLOTS_AVAILABLE)
-                            ).build())
+                    .setName(text(getName(), AQUA).decoration(BOLD, true))
+                    .setLore(new LoreBuilder()
+                            .addLines(true, getDescription())
+                            .emptyLine()
+                            .addLine(text(plotsOpen, GOLD)
+                                    .append(text(" " + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_OPEN) + " ", GRAY))
+                                    .append(LangUtil.getInstance().getComponent(player.getUniqueId(), LangPaths.CityProject.FOR_YOUR_DIFFICULTY, DARK_GRAY,
+                                            text(plotsOpenForPlayer + " ", plotsOpenForPlayer == 0 ? RED : GREEN))))
+                            .addLine(text("---------------------", DARK_GRAY))
+                            .addLine(text(plotsInProgress, GOLD)
+                                    .append(text(" " + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_IN_PROGRESS), GRAY)))
+                            .addLine(text(plotsCompleted, GOLD)
+                                    .append(text(" " + LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_COMPLETED), GRAY)))
+                            .emptyLine()
+                            .addLine(plotsUnclaimed != 0
+                                    ? Utils.ItemUtils.getFormattedDifficulty(cpPlotDifficulty)
+                                    : text(LangUtil.getInstance().get(player, LangPaths.CityProject.PROJECT_NO_PLOTS_AVAILABLE), WHITE).decoration(BOLD, true))
+                            .build())
                     .build();
-
         } catch (SQLException | ExecutionException | InterruptedException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
+            Utils.logSqlException(ex);
+            Thread.currentThread().interrupt();
             return MenuItems.errorItem(player);
         }
     }
 
-    public static List<CityProject> getCityProjects(Country country, boolean onlyVisible) {
+    public static @NotNull List<CityProject> getCityProjects(Country country, boolean onlyVisible) {
         // if country is not null, only get country's city projects, otherwise load all
         DatabaseConnection.StatementBuilder statement = DatabaseConnection.createStatement("SELECT id FROM plotsystem_city_projects " + (country == null ? "" : "WHERE country_id = ?") + " ORDER BY country_id");
-        if (country != null) {
-            statement.setValue(country.getID());
-        }
+        if (country != null) statement.setValue(country.getID());
 
         try (ResultSet rs = statement.executeQuery()) {
             List<CityProject> cityProjects = new ArrayList<>();
             while (rs.next()) {
                 CityProject city = new CityProject(rs.getInt(1));
-                if (city.isVisible() || !onlyVisible) {
-                    cityProjects.add(city);
-                }
+                if (city.isVisible() || !onlyVisible) cityProjects.add(city);
             }
 
             DatabaseConnection.closeResultSet(rs);
             return cityProjects;
         } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
+            PlotSystem.getPlugin().getComponentLogger().error(text("A SQL error occurred!"), ex);
         }
         return new ArrayList<>();
     }
 
-    private int getOpenPlotsForPlayer(int plotID, PlotDifficulty plotDifficulty) throws SQLException {
+    public int getOpenPlotsForPlayer(int plotID, PlotDifficulty plotDifficulty) throws SQLException {
         return Plot.getPlots(plotID, plotDifficulty, Status.unclaimed).size();
     }
 
 
-    public static List<CityProject> getCityProjects(boolean onlyVisible) {
+    public static @NotNull List<CityProject> getCityProjects(boolean onlyVisible) {
         return getCityProjects(null, onlyVisible);
     }
 
-    public static void addCityProject(Country country, String name) throws SQLException {
+    public static void addCityProject(@NotNull Country country, String name) throws SQLException {
         DatabaseConnection.createStatement("INSERT INTO plotsystem_city_projects (id, name, country_id, description, visible) VALUES (?, ?, ?, ?, ?)")
                 .setValue(DatabaseConnection.getTableID("plotsystem_city_projects"))
                 .setValue(name)

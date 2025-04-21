@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- *  Copyright © 2023, Alps BTE <bte.atchli@gmail.com>
+ *  Copyright © 2025, Alps BTE <bte.atchli@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -24,28 +24,29 @@
 
 package com.alpsbte.plotsystem.core.system.plot;
 
+import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.core.database.DatabaseConnection;
 import com.alpsbte.plotsystem.core.system.Builder;
-import com.alpsbte.plotsystem.PlotSystem;
 import com.alpsbte.plotsystem.core.system.CityProject;
 import com.alpsbte.plotsystem.core.system.Country;
 import com.alpsbte.plotsystem.core.system.Review;
 import com.alpsbte.plotsystem.core.system.plot.utils.PlotType;
 import com.alpsbte.plotsystem.core.system.plot.utils.PlotUtils;
-import com.alpsbte.plotsystem.core.system.plot.world.PlotWorld;
 import com.alpsbte.plotsystem.core.system.plot.world.CityPlotWorld;
 import com.alpsbte.plotsystem.core.system.plot.world.OnePlotWorld;
-import com.alpsbte.plotsystem.utils.io.ConfigPaths;
+import com.alpsbte.plotsystem.core.system.plot.world.PlotWorld;
+import com.alpsbte.plotsystem.utils.Utils;
 import com.alpsbte.plotsystem.utils.enums.PlotDifficulty;
 import com.alpsbte.plotsystem.utils.enums.Slot;
 import com.alpsbte.plotsystem.utils.enums.Status;
+import com.alpsbte.plotsystem.utils.io.ConfigPaths;
 import com.alpsbte.plotsystem.utils.io.FTPManager;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
@@ -57,8 +58,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import static net.kyori.adventure.text.Component.text;
 
 public class Plot extends AbstractPlot {
     private CityProject city;
@@ -69,13 +71,13 @@ public class Plot extends AbstractPlot {
     }
 
     public CityProject getCity() throws SQLException {
-        if(this.city != null)
+        if (this.city != null)
             return this.city;
 
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT city_project_id FROM plotsystem_plots WHERE id = ?")
                 .setValue(this.ID).executeQuery()) {
 
-            if (rs.next()){
+            if (rs.next()) {
                 int i = rs.getInt(1);
                 DatabaseConnection.closeResultSet(rs);
                 CityProject cityProject = new CityProject(i);
@@ -94,7 +96,7 @@ public class Plot extends AbstractPlot {
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT difficulty_id FROM plotsystem_plots WHERE id = ?")
                 .setValue(this.ID).executeQuery()) {
 
-            if (rs.next()){
+            if (rs.next()) {
                 int i = rs.getInt(1);
                 DatabaseConnection.closeResultSet(rs);
                 return PlotDifficulty.values()[i - 1];
@@ -107,14 +109,14 @@ public class Plot extends AbstractPlot {
 
     @Override
     public Builder getPlotOwner() throws SQLException {
-        if(plotOwner != null)
+        if (plotOwner != null)
             return plotOwner;
 
-        if(getStatus() != Status.unclaimed) {
+        if (getStatus() != Status.unclaimed) {
             try (ResultSet rs = DatabaseConnection.createStatement("SELECT owner_uuid FROM plotsystem_plots WHERE id = ?")
                     .setValue(this.ID).executeQuery()) {
 
-                if (rs.next()){
+                if (rs.next()) {
                     String s = rs.getString(1);
                     DatabaseConnection.closeResultSet(rs);
 
@@ -147,9 +149,9 @@ public class Plot extends AbstractPlot {
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT member_uuids FROM plotsystem_plots WHERE id = ?")
                 .setValue(this.ID).executeQuery()) {
 
-            if(rs.next()) {
+            if (rs.next()) {
                 String members = rs.getString(1);
-                if(!rs.wasNull()) {
+                if (!rs.wasNull()) {
                     String[] uuidMembers = members.split(",");
 
                     for (String uuid : uuidMembers) {
@@ -167,7 +169,7 @@ public class Plot extends AbstractPlot {
         // Convert plot member list to string
         String plotMemberAsString = plotMembers.stream().map(member -> member.getUUID().toString()).collect(Collectors.joining(","));
 
-        if(!plotMembers.isEmpty()) {
+        if (!plotMembers.isEmpty()) {
             DatabaseConnection.createStatement("UPDATE plotsystem_plots SET member_uuids = ? WHERE id = ?")
                     .setValue(plotMemberAsString).setValue(this.ID).executeUpdate();
         } else {
@@ -187,13 +189,13 @@ public class Plot extends AbstractPlot {
                 if (cityPlotWorld == null) cityPlotWorld = new CityPlotWorld(this);
                 return (T) cityPlotWorld;
             }
-        } catch (SQLException ex) { Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex); }
+        } catch (SQLException ex) {Utils.logSqlException(ex);}
         return null;
     }
 
     @Override
     public List<BlockVector2> getOutline() throws SQLException, IOException {
-        if(outline != null)
+        if (outline != null)
             return this.outline;
 
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT outline FROM plotsystem_plots WHERE id = ?")
@@ -229,7 +231,7 @@ public class Plot extends AbstractPlot {
 
     @Override
     public void setLastActivity(boolean setNull) throws SQLException {
-        if(setNull) {
+        if (setNull) {
             DatabaseConnection.createStatement("UPDATE plotsystem_plots SET last_activity = DEFAULT(last_activity) WHERE id = ?")
                     .setValue(this.ID).executeUpdate();
         } else {
@@ -264,9 +266,9 @@ public class Plot extends AbstractPlot {
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT score FROM plotsystem_plots WHERE id = ?")
                 .setValue(this.ID).executeQuery()) {
 
-            if(rs.next()) {
+            if (rs.next()) {
                 int score = rs.getInt(1);
-                if(!rs.wasNull()) {
+                if (!rs.wasNull()) {
                     DatabaseConnection.closeResultSet(rs);
                     return score;
                 }
@@ -316,7 +318,7 @@ public class Plot extends AbstractPlot {
         }
     }
 
-    public void setPlotType(PlotType type) throws SQLException {
+    public void setPlotType(@NotNull PlotType type) throws SQLException {
         DatabaseConnection.createStatement("UPDATE plotsystem_plots SET type = ? WHERE id = ?")
                 .setValue(type.ordinal()).setValue(this.ID).executeUpdate();
         plotType = type;
@@ -342,7 +344,7 @@ public class Plot extends AbstractPlot {
             }
 
             DatabaseConnection.closeResultSet(rs);
-        } catch (SQLException ex) { Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex); }
+        } catch (SQLException ex) {Utils.logSqlException(ex);}
         return PLOT_VERSION;
     }
 
@@ -357,75 +359,52 @@ public class Plot extends AbstractPlot {
     }
 
     @Override
-    protected File getSchematicFile(String fileName){
+    protected File getSchematicFile(String fileName) {
         try {
             return CompletableFuture.supplyAsync(() -> {
                 try {
-                    File file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + ".schem").toFile();
+                    File file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + PlotUtils.SCHEM_ENDING).toFile();
 
                     if (!file.exists()) {
                         // if .schem doesn't exist, it looks for old .schematic format for backwards compatibility
-                        file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + ".schematic").toFile();
+                        file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + PlotUtils.SCHEMATIC_ENDING).toFile();
                     }
 
-                    if (!file.exists()) {
-                        if (getCity().getCountry().getServer().getFTPConfiguration() != null) {
-                            if (!FTPManager.downloadSchematic(FTPManager.getFTPUrl(getCity().getCountry().getServer(), getCity().getID()), file)) {
-                                file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + ".schem").toFile();
-                                FTPManager.downloadSchematic(FTPManager.getFTPUrl(getCity().getCountry().getServer(), getCity().getID()), file);
-                            }
-                        }
+                    if (!file.exists() && getCity().getCountry().getServer().getFTPConfiguration() != null && !FTPManager.downloadSchematic(FTPManager.getFTPUrl(getCity().getCountry().getServer(), getCity().getID()), file)) {
+                        file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), String.valueOf(getCity().getID()), fileName + PlotUtils.SCHEM_ENDING).toFile();
+                        FTPManager.downloadSchematic(FTPManager.getFTPUrl(getCity().getCountry().getServer(), getCity().getID()), file);
                     }
 
                     return file;
-                } catch (SQLException | URISyntaxException ex) {
-                    Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
-                }
+                } catch (SQLException | URISyntaxException ex) {Utils.logSqlException(ex);}
                 return null;
             }).get();
         } catch (InterruptedException | ExecutionException ex) {
+            Thread.currentThread().interrupt();
             return null;
         }
     }
 
     public File getCompletedSchematic() {
         try {
-            File file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), "finishedSchematics", String.valueOf(getCity().getID()), getID() + ".schem").toFile();
+            File file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), "finishedSchematics", String.valueOf(getCity().getID()), getID() + PlotUtils.SCHEM_ENDING).toFile();
             if (!file.exists()) {
                 // if .schem doesn't exist, it looks for old .schematic format for backwards compatibility
-                file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), "finishedSchematics", String.valueOf(getCity().getID()), getID() + ".schematic").toFile();
+                file = Paths.get(PlotUtils.getDefaultSchematicPath(), String.valueOf(getCity().getCountry().getServer().getID()), "finishedSchematics", String.valueOf(getCity().getID()), getID() + PlotUtils.SCHEMATIC_ENDING).toFile();
             }
             return file;
-        } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "A SQL error occurred!", ex);
-        }
+        } catch (SQLException ex) {Utils.logSqlException(ex);}
         return null;
     }
 
-    @Deprecated
-    public BlockVector3 getMinecraftCoordinates() throws SQLException {
-        try (ResultSet rs = DatabaseConnection.createStatement("SELECT mc_coordinates FROM plotsystem_plots WHERE id = ?")
-                .setValue(this.ID).executeQuery()) {
-
-            if (rs.next()) {
-                String[] mcLocation = rs.getString(1).split(",");
-                DatabaseConnection.closeResultSet(rs);
-                return BlockVector3.at(Double.parseDouble(mcLocation[0]), Double.parseDouble(mcLocation[1]), Double.parseDouble(mcLocation[2]));
-            }
-
-            DatabaseConnection.closeResultSet(rs);
-
-            return null;
-        }
-    }
-
+    @Override
     public BlockVector3 getCenter() {
         try {
             if (getVersion() >= 3) {
                 return super.getCenter();
             } else return BlockVector3.at(PlotWorld.PLOT_SIZE / 2d, this.getWorld().getPlotHeightCentered(), PlotWorld.PLOT_SIZE / 2d);
         } catch (IOException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Failed to load schematic file to clipboard!", ex);
+            PlotSystem.getPlugin().getComponentLogger().error(text("Failed to load schematic file to clipboard!"), ex);
         }
         return null;
     }
@@ -434,10 +413,10 @@ public class Plot extends AbstractPlot {
         try (ResultSet rs = DatabaseConnection.createStatement("SELECT first_slot, second_slot, third_slot FROM plotsystem_builders WHERE uuid = ?")
                 .setValue(this.getPlotOwner().getUUID().toString()).executeQuery()) {
 
-            if(rs.next()) {
-                for(int i = 1; i <= 3; i++) {
+            if (rs.next()) {
+                for (int i = 1; i <= 3; i++) {
                     int slot = rs.getInt(i);
-                    if(!rs.wasNull() && slot == getID()) {
+                    if (!rs.wasNull() && slot == getID()) {
                         DatabaseConnection.closeResultSet(rs);
                         return Slot.values()[i - 1];
                     }
@@ -451,7 +430,7 @@ public class Plot extends AbstractPlot {
     }
 
     public Review getReview() throws SQLException {
-        if(getStatus() == Status.completed || isRejected()) {
+        if (getStatus() == Status.completed || isRejected()) {
             try (ResultSet rs = DatabaseConnection.createStatement("SELECT review_id FROM plotsystem_plots WHERE id = ?")
                     .setValue(this.ID).executeQuery()) {
 
@@ -509,37 +488,35 @@ public class Plot extends AbstractPlot {
     }
 
 
-
-
-    public static List<Plot> getPlots() throws SQLException {
+    public static @NotNull List<Plot> getPlots() throws SQLException {
         return listPlots(DatabaseConnection.createStatement("SELECT id FROM plotsystem_plots").executeQuery());
     }
 
-    public static List<Plot> getPlots(Status... statuses) throws SQLException {
+    public static @NotNull List<Plot> getPlots(Status... statuses) throws SQLException {
         ResultSet rs = DatabaseConnection.createStatement(getStatusQuery("", statuses)).executeQuery();
         return listPlots(rs);
     }
 
-    public static List<Plot> getPlots(Builder builder) throws SQLException {
+    public static @NotNull List<Plot> getPlots(@NotNull Builder builder) throws SQLException {
         List<Plot> plots = listPlots(DatabaseConnection.createStatement("SELECT id FROM plotsystem_plots WHERE owner_uuid = '" + builder.getUUID() + "' ORDER BY CAST(status AS CHAR)").executeQuery());
         plots.addAll(listPlots(DatabaseConnection.createStatement("SELECT id FROM plotsystem_plots WHERE INSTR(member_uuids, '" + builder.getUUID() + "') > 0 ORDER BY CAST(status AS CHAR)").executeQuery()));
         return plots;
     }
 
-    public static List<Plot> getPlots(Builder builder, Status... statuses) throws SQLException {
+    public static @NotNull List<Plot> getPlots(@NotNull Builder builder, Status... statuses) throws SQLException {
         List<Plot> plots = listPlots(DatabaseConnection.createStatement(getStatusQuery(" AND owner_uuid = '" + builder.getUUID().toString() + "'", statuses)).executeQuery());
         plots.addAll(getPlotsAsMember(builder, statuses));
         return plots;
     }
 
-    public static List<Plot> getPlots(List<Country> countries, Status status) throws SQLException {
+    public static @NotNull List<Plot> getPlots(@NotNull List<Country> countries, Status status) throws SQLException {
         List<CityProject> cities = new ArrayList<>();
         countries.forEach(c -> cities.addAll(c.getCityProjects()));
         return getPlots(cities, status);
     }
 
     // Temporary fix to receive plots of builder as member
-    private static List<Plot> getPlotsAsMember(Builder builder, Status... status) throws SQLException {
+    private static @NotNull List<Plot> getPlotsAsMember(Builder builder, Status @NotNull ... status) throws SQLException {
         List<Plot> plots = new ArrayList<>();
         for (Status stat : status) {
             plots.addAll(listPlots(DatabaseConnection.createStatement("SELECT id FROM plotsystem_plots WHERE status = '" + stat.name() + "' AND INSTR(member_uuids, '" + builder.getUUID() + "') > 0 ORDER BY CAST(status AS CHAR)").executeQuery()));
@@ -547,12 +524,12 @@ public class Plot extends AbstractPlot {
         return plots;
     }
 
-    public static List<Plot> getPlots(int cityID, Status... statuses) throws SQLException {
+    public static @NotNull List<Plot> getPlots(int cityID, Status... statuses) throws SQLException {
         return listPlots(DatabaseConnection.createStatement(getStatusQuery(" AND city_project_id = '" + cityID + "'", statuses)).executeQuery());
     }
 
-    public static List<Plot> getPlots(List<CityProject> cities, Status... statuses) throws SQLException {
-        if(cities.isEmpty()) {
+    public static @NotNull List<Plot> getPlots(@NotNull List<CityProject> cities, Status... statuses) throws SQLException {
+        if (cities.isEmpty()) {
             return new ArrayList<>();
         }
         StringBuilder query = new StringBuilder(" AND (city_project_id = ");
@@ -565,7 +542,7 @@ public class Plot extends AbstractPlot {
         return listPlots(DatabaseConnection.createStatement(getStatusQuery(query.toString(), statuses)).executeQuery());
     }
 
-    public static List<Plot> getPlots(int cityID, PlotDifficulty plotDifficulty, Status status) throws SQLException {
+    public static @NotNull List<Plot> getPlots(int cityID, @NotNull PlotDifficulty plotDifficulty, @NotNull Status status) throws SQLException {
         return listPlots(DatabaseConnection.createStatement("SELECT id FROM plotsystem_plots WHERE city_project_id = ? AND difficulty_id = ? AND status = ?")
                 .setValue(cityID)
                 .setValue(plotDifficulty.ordinal() + 1)
@@ -573,7 +550,7 @@ public class Plot extends AbstractPlot {
                 .executeQuery());
     }
 
-    private static String getStatusQuery(String additionalQuery, Status... statuses) {
+    private static @NotNull String getStatusQuery(String additionalQuery, Status @NotNull ... statuses) {
         StringBuilder query = new StringBuilder("SELECT id FROM plotsystem_plots WHERE status = ");
 
         for (int i = 0; i < statuses.length; i++) {
@@ -583,7 +560,7 @@ public class Plot extends AbstractPlot {
         return query.toString();
     }
 
-    private static List<Plot> listPlots(ResultSet rs) throws SQLException {
+    private static @NotNull List<Plot> listPlots(@NotNull ResultSet rs) throws SQLException {
         List<Plot> plots = new ArrayList<>();
 
         while (rs.next()) {
@@ -594,7 +571,7 @@ public class Plot extends AbstractPlot {
         return plots;
     }
 
-    public static double getMultiplierByDifficulty(PlotDifficulty plotDifficulty) throws SQLException {
+    public static double getMultiplierByDifficulty(@NotNull PlotDifficulty plotDifficulty) throws SQLException {
         ResultSet rs = DatabaseConnection.createStatement("SELECT multiplier FROM plotsystem_difficulties WHERE id = ?")
                 .setValue(plotDifficulty.ordinal() + 1).executeQuery();
 
@@ -623,15 +600,17 @@ public class Plot extends AbstractPlot {
         }
     }
 
-    public static boolean hasPlotDifficultyScoreRequirement(Builder builder, PlotDifficulty plotDifficulty) throws SQLException {
+    public static boolean hasPlotDifficultyScoreRequirement(@NotNull Builder builder, PlotDifficulty plotDifficulty) throws SQLException {
         int playerScore = builder.getScore();
         int scoreRequirement = Plot.getScoreRequirementByDifficulty(plotDifficulty);
         return playerScore >= scoreRequirement;
     }
 
-    public static CompletableFuture<PlotDifficulty> getPlotDifficultyForBuilder(int cityID, Builder builder) throws SQLException {
+    public static @NotNull CompletableFuture<PlotDifficulty> getPlotDifficultyForBuilder(int cityID, Builder builder) throws SQLException {
         // Check if plot difficulties are available
-        boolean easyHasPlots = false, mediumHasPlots = false, hardHasPlots = false;
+        boolean easyHasPlots = false;
+        boolean mediumHasPlots = false;
+        boolean hardHasPlots = false;
         if (!getPlots(cityID, PlotDifficulty.EASY, Status.unclaimed).isEmpty()) easyHasPlots = true;
         if (!getPlots(cityID, PlotDifficulty.MEDIUM, Status.unclaimed).isEmpty()) mediumHasPlots = true;
         if (!getPlots(cityID, PlotDifficulty.HARD, Status.unclaimed).isEmpty()) hardHasPlots = true;
