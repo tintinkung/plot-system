@@ -82,7 +82,7 @@ public class PlotTypeMenu extends AbstractMenu {
         getMenu().getSlot(15).setItem(
                 new ItemBuilder(AlpsHeadUtils.getCustomHead(CustomHeads.CITY_INSPIRATION_MODE_BUTTON.getId()))
                         .setName(text(LangUtil.getInstance().get(getMenuPlayer(), LangPaths.MenuTitle.SELECT_CITY_INSPIRATION_MODE), GOLD, BOLD)
-                                .append(text(" [", DARK_GRAY).append(text("BETA", RED).append(text("]", DARK_GRAY))))) // temporary BETA tag
+                                .append(text(" [", DARK_GRAY).append(text("WORK IN PROGRESS", RED).append(text("]", DARK_GRAY))))) // temporary BETA tag
                         .setLore(new LoreBuilder()
                                 .addLine(LangUtil.getInstance().get(getMenuPlayer(), LangPaths.MenuDescription.SELECT_CITY_INSPIRATION_MODE), true)
                                 .build())
@@ -117,9 +117,10 @@ public class PlotTypeMenu extends AbstractMenu {
             reloadMenuAsync();
         }));
 
+        // WORK IN PROGRESS: Disabled city project of type
         getMenu().getSlot(15).setClickHandler(((clickPlayer, clickInformation) -> {
-            builder.setPlotTypeSetting(PlotType.CITY_INSPIRATION_MODE);
-            getMenuPlayer().playSound(getMenuPlayer().getLocation(), Utils.SoundUtils.DONE_SOUND, 1f, 1f);
+            // builder.setPlotTypeSetting(PlotType.CITY_INSPIRATION_MODE);
+            getMenuPlayer().playSound(getMenuPlayer().getLocation(), Utils.SoundUtils.ERROR_SOUND, 1f, 1f);
             reloadMenuAsync();
         }));
 
