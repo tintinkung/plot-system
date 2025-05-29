@@ -129,7 +129,12 @@ public class CMD_Setup_Country extends SubCommand {
 
         @Override
         public void onCommand(CommandSender sender, String[] args) {
-            if (args.length <= 3 || AlpsUtils.tryParseInt(args[1]) == null) {sendInfo(sender); return;}
+            if (args.length <= 3) {sendInfo(sender); return;}
+
+            if(AlpsUtils.tryParseInt(args[1]) != null) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat("Country code is not an integer!"));
+                return;
+            }
 
             String code = args[1];
             if (code.length() > 2) {

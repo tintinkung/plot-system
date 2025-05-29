@@ -67,32 +67,33 @@ public class CMD_Plot_Teleport extends SubCommand implements ICommand {
 
         int plotID = Integer.parseInt(args[0]);
 
-        CompletableFuture.runAsync(() -> {
-            Plot plot = DataProvider.PLOT.getPlotById(plotID);
+        Plot plot = DataProvider.PLOT.getPlotById(plotID);
 
-            if (plot != null && plot.getVersion() <= AbstractPlot.LEGACY_VERSION_THRESHOLD) {
-                player.sendMessage(Utils.ChatUtils.getAlertFormat(LangUtil.getInstance().get(sender, LangPaths.Message.Error.CANNOT_LOAD_LEGACY_PLOT)));
+        if (plot != null && plot.getVersion() <= AbstractPlot.LEGACY_VERSION_THRESHOLD) {
+            player.sendMessage(Utils.ChatUtils.getAlertFormat(LangUtil.getInstance().get(sender, LangPaths.Message.Error.CANNOT_LOAD_LEGACY_PLOT)));
+            return;
+        }
+
+        if (plot == null || plot.getStatus() == Status.unclaimed) {
+            if (!sender.hasPermission("plotsystem.admin") || plot == null) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLOT_DOES_NOT_EXIST)));
                 return;
             }
 
-            if (plot == null || plot.getStatus() == Status.unclaimed) {
-                if (!sender.hasPermission("plotsystem.admin") || plot == null) {
-                    sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.PLOT_DOES_NOT_EXIST)));
-                    return;
-                }
-
-                Builder builder = Builder.byUUID(player.getUniqueId());
-                if (builder == null) {
-                    sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.ERROR_OCCURRED)));
-                    return;
-                }
-
-                Bukkit.getScheduler().runTask(PlotSystem.getPlugin(), () -> new DefaultPlotGenerator(plot, builder));
+            Builder builder = Builder.byUUID(player.getUniqueId());
+            if (builder == null) {
+                sender.sendMessage(Utils.ChatUtils.getAlertFormat(langUtil.get(sender, LangPaths.Message.Error.ERROR_OCCURRED)));
                 return;
             }
 
-            plot.getWorld().teleportPlayer(player);
-        });
+            // java.lang.IllegalStateException: WorldBorderCenterChangeEvent may only be triggered synchronously.
+            // at org.bukkit.WorldCreator.createWorld(WorldCreator.java:502)
+            // at multiverse-core-4.3.14.jar//com.onarandombox.MultiverseCore.utils.WorldManager.doLoad(WorldManager.java:486)
+            new DefaultPlotGenerator(plot, builder);
+            return;
+        }
+
+        plot.getWorld().teleportPlayer(player);
     }
 
     @Override

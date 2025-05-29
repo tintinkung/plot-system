@@ -47,7 +47,7 @@ public class CoordinateConversion {
         projection = GeographicProjection.projections.get("bteairocean");
         projection = GeographicProjection.orientProjection(projection, GeographicProjection.Orientation.upright);
         projection = new ScaleProjectionTransform(projection, 7318261.522857145, 7318261.522857145);
-        projection = new OffsetProjectionTransform(projection, 0, 0);
+        projection = new OffsetProjectionTransform(projection, -13379008, 2727648);
     }
 
     /**

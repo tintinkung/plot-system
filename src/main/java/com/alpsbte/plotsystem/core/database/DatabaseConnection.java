@@ -326,6 +326,7 @@ public class DatabaseConnection {
                             "    PRIMARY KEY (tutorial_id, uuid)" +
                             ");",
 
+                    // TODO: 'plotsystem_v2' Isn't needed
                     // Review
                     "CREATE TABLE IF NOT EXISTS plotsystem_v2.plot_review" +
                             "(" +
